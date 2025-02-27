@@ -245,6 +245,11 @@
             const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth()+1).toString().padStart(2, '0')}.${today.getFullYear()}`;
             document.getElementById('last-updated-date').textContent = formattedDate;
         });
+
+        // Add this with your other loadContent calls
+loadContent('videos', 'videos-section');
+
+        
     </script>
 </body>
 </html>
