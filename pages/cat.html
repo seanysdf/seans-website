@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ART ARCHIVE | All Cat Content</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <h1>ALL CAT CONTENT</h1>
+    <div class="subtitle">feline adventures and observations</div>
+    
+    <div id="cat-list" class="cat-section">
+        <div class="loading">Loading cat content...</div>
+    </div>
+    
+    <div class="footer">
+        <a href="/">← back to archive</a>
+    </div>
+
+    <script>
+        // Load cat content
+        fetch('../data/cat.json?v=' + new Date().getTime())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('No cat content found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const catList = document.getElementById('cat-list');
+                catList.innerHTML = ''; // Clear loading message
+                
+                // Display all items
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'cat-item';
+                        
+                        // Create date span
+                        const dateSpan = document.createElement('span');
+                        dateSpan.className = 'date';
+                        dateSpan.textContent = item.date;
+                        itemDiv.appendChild(dateSpan);
+                        
+                        // Create title link
+                        const titleLink = document.createElement('a');
+                        titleLink.href = '../' + item.url;
+                        titleLink.textContent = item.title;
+                        itemDiv.appendChild(titleLink);
+                        
+                        // Add description if available
+                        if (item.description) {
+                            const descSpan = document.createElement('span');
+                            descSpan.className = 'description';
+                            descSpan.textContent = item.description;
+                            itemDiv.appendChild(descSpan);
+                        }
+                        
+                        catList.appendChild(itemDiv);
+                    });
+                } else {
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = 'cat-item';
+                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                    catList.appendChild(emptyItem);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading cat content:', error);
+                const catList = document.getElementById('cat-list');
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'cat-item';
+                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                catList.innerHTML = '';
+                catList.appendChild(emptyItem);
+            });
+    </script>
+</body>
+</html>
