@@ -1,4 +1,3 @@
-
 ---
 name: Video Entry
 about: Add a new video to the archive
