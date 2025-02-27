@@ -27,141 +27,45 @@
             padding-bottom: 3px;
             text-transform: uppercase;
         }
-        
-        a {
-            color: #000;
-            text-decoration: none;
+
+        .video-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
         }
-        
-        a:hover {
-            text-decoration: underline;
+
+        iframe {
+            width: 100%;
+            max-width: 560px;
+            height: 315px;
+            border-radius: 5px;
         }
-        
-        a:visited {
-            color: #555;
-        }
-        
-        .date {
-            color: #666;
-            font-size: 12px;
-            display: inline-block;
-            width: 90px;
-        }
-        
-        .description {
-            color: #444;
-            font-size: 12px;
-            margin-left: 10px;
-            font-style: italic;
-        }
-        
-        .item {
-            margin-bottom: 6px;
-            line-height: 1.4;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            font-size: 11px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-        }
-        
-        .random {
-            margin: 20px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            background-color: #f0f0f0;
-            font-family: "Courier New", monospace;
-        }
-        
-        .subtitle {
-            color: #666;
-            font-size: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .cat-section {
-            margin: 20px 0;
-        }
-        
-        .cat-item {
-            margin-bottom: 8px;
-        }
-        
-        .view-all {
-            text-align: right;
-            margin-top: 5px;
-            font-size: 12px;
-        }
-        
+
         .loading {
             color: #888;
             font-style: italic;
             font-size: 12px;
             margin-left: 90px;
         }
+
     </style>
 </head>
 <body>
     <h1>ART ARCHIVE</h1>
     <div class="subtitle">personal collection of works / updated irregularly</div>
     
-    <h2>ART</h2>
-    <div id="art-section">
-        <div class="loading">Loading art entries...</div>
-    </div>
-    
-    <h2>PHOTOS</h2>
-    <div id="photos-section">
-        <div class="loading">Loading photo entries...</div>
-    </div>
-    
-    <h2>JOURNAL</h2>
-    <div id="journal-section">
-        <div class="loading">Loading journal entries...</div>
-    </div>
-    
-    <h2>MY CAT</h2>
-    <div id="cat-section" class="cat-section">
-        <div class="loading">Loading cat content...</div>
-    </div>
-
     <h2>VIDEOS</h2>
-<div id="videos-section">
-    <div class="loading">Loading video entries...</div>
-</div>
-
-<div style="text-align: right; margin-top: 5px;">
-    <a href="pages/videos.html">see all videos (0) →</a>
-</div>
-    
-    <h2>SOMETHING RANDOM</h2>
-    
-    <div class="random">
-    found a roll of film from 2019 under my bed. getting it developed tomorrow.<br>
-    <br>
-    current studio playlist:<br>
-    - boards of canada - music has the right to children<br>
-    - autechre - amber<br>
-    - aphex twin - selected ambient works 85-92<br>
-    - burial - untrue<br>
-    <br>
-    dream from last night: standing in an empty museum where all the paintings were actually windows<br>
-    <br>
-    next experiment: trying to create a camera obscura in my bathroom
+    <div id="videos-section" class="video-container">
+        <div class="loading">Loading video entries...</div>
     </div>
-    
-    <div class="footer">
-        last updated: <span id="last-updated-date">15.05.2024</span> | no images loaded = faster browsing<br>
-        <a href="mailto:artist@example.com">contact</a> | 
-        <a href="archive.html">complete archive</a> | 
-        <a href="about.html">about</a>
+
+    <div style="text-align: right; margin-top: 5px;">
+        <a id="videos-link" href="pages/videos.html">see all videos (0) →</a>
     </div>
 
     <script>
-        // Function to load content from JSON file
         function loadContent(contentType, elementId, limit = 5) {
             fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
                 .then(response => {
@@ -172,84 +76,41 @@
                 })
                 .then(data => {
                     const contentSection = document.getElementById(elementId);
-                    contentSection.innerHTML = ''; // Clear loading message
-                    
-                    // Display the most recent items
+                    contentSection.innerHTML = '';
+
                     if (data.items && data.items.length > 0) {
-                        // Update the last updated date
-                        if (data.items[0] && data.items[0].date) {
-                            document.getElementById('last-updated-date').textContent = data.items[0].date;
-                        }
-                        
                         data.items.slice(0, limit).forEach(item => {
-                            const itemDiv = document.createElement('div');
-                            itemDiv.className = contentType === 'cat' ? 'cat-item' : 'item';
-                            
-                            // Create date span
-                            const dateSpan = document.createElement('span');
-                            dateSpan.className = 'date';
-                            dateSpan.textContent = item.date;
-                            itemDiv.appendChild(dateSpan);
-                            
-                            // Create title link
-                            const titleLink = document.createElement('a');
-                            titleLink.href = item.url;
-                            titleLink.textContent = item.title;
-                            itemDiv.appendChild(titleLink);
-                            
-                            // Add description if available
-                            if (item.description) {
-                                const descSpan = document.createElement('span');
-                                descSpan.className = 'description';
-                                descSpan.textContent = item.description;
-                                itemDiv.appendChild(descSpan);
+                            if (contentType === 'videos') {
+                                const videoId = item.url.split("v=")[1];
+                                const videoFrame = document.createElement('iframe');
+                                videoFrame.src = `https://www.youtube.com/embed/${videoId}`;
+                                videoFrame.frameBorder = "0";
+                                videoFrame.allowFullscreen = true;
+                                contentSection.appendChild(videoFrame);
+                            } else {
+                                const itemDiv = document.createElement('div');
+                                itemDiv.innerHTML = `<span class="date">${item.date}</span> <a href="${item.url}">${item.title}</a>`;
+                                contentSection.appendChild(itemDiv);
                             }
-                            
-                            contentSection.appendChild(itemDiv);
                         });
-                        
-                        // Add "see all" link if there are more than the limit
-                        if (data.items.length > limit) {
-                            const seeAllDiv = document.createElement('div');
-                            seeAllDiv.className = 'view-all';
-                            seeAllDiv.innerHTML = `<a href="${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
-                            contentSection.appendChild(seeAllDiv);
+
+                        // Update "see all videos" count
+                        if (contentType === 'videos') {
+                            document.getElementById('videos-link').innerText = `see all videos (${data.items.length}) →`;
                         }
                     } else {
-                        const emptyItem = document.createElement('div');
-                        emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
-                        emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
-                        contentSection.appendChild(emptyItem);
+                        contentSection.innerHTML = '<span class="loading">No entries yet</span>';
                     }
                 })
                 .catch(error => {
                     console.error(`Error loading ${contentType} content:`, error);
-                    const contentSection = document.getElementById(elementId);
-                    const emptyItem = document.createElement('div');
-                    emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
-                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
-                    contentSection.innerHTML = '';
-                    contentSection.appendChild(emptyItem);
+                    document.getElementById(elementId).innerHTML = '<span class="loading">No entries yet</span>';
                 });
         }
 
-        // Load all content types when the page loads
         document.addEventListener('DOMContentLoaded', function() {
-            loadContent('art', 'art-section');
-            loadContent('photos', 'photos-section');
-            loadContent('journal', 'journal-section');
-            loadContent('cat', 'cat-section');
-            
-            // Set today's date as the default
-            const today = new Date();
-            const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth()+1).toString().padStart(2, '0')}.${today.getFullYear()}`;
-            document.getElementById('last-updated-date').textContent = formattedDate;
+            loadContent('videos', 'videos-section');
         });
-
-        // Add this with your other loadContent calls
-loadContent('videos', 'videos-section');
-
-        
     </script>
 </body>
 </html>
