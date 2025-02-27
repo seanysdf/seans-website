@@ -135,7 +135,6 @@ jobs:
           }
           EOF
 
-          # Run processing script
           node process-issue.js
 
       - name: Commit and Push Changes
