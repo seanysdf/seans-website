@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ART ARCHIVE | All Photos</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <h1>ALL PHOTOS</h1>
+    <div class="subtitle">complete archive of photo entries</div>
+    
+    <div id="photos-list">
+        <div class="loading">Loading photo entries...</div>
+    </div>
+    
+    <div class="footer">
+        <a href="/">← back to archive</a>
+    </div>
+
+    <script>
+        // Load photos content
+        fetch('../data/photos.json?v=' + new Date().getTime())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('No photos content found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const photosList = document.getElementById('photos-list');
+                photosList.innerHTML = ''; // Clear loading message
+                
+                // Display all items
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'item';
+                        
+                        // Create date span
+                        const dateSpan = document.createElement('span');
+                        dateSpan.className = 'date';
+                        dateSpan.textContent = item.date;
+                        itemDiv.appendChild(dateSpan);
+                        
+                        // Create title link
+                        const titleLink = document.createElement('a');
+                        titleLink.href = '../' + item.url;
+                        titleLink.textContent = item.title;
+                        itemDiv.appendChild(titleLink);
+                        
+                        // Add description if available
+                        if (item.description) {
+                            const descSpan = document.createElement('span');
+                            descSpan.className = 'description';
+                            descSpan.textContent = item.description;
+                            itemDiv.appendChild(descSpan);
+                        }
+                        
+                        photosList.appendChild(itemDiv);
+                    });
+                } else {
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = 'item';
+                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                    photosList.appendChild(emptyItem);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading photos content:', error);
+                const photosList = document.getElementById('photos-list');
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'item';
+                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                photosList.innerHTML = '';
+                photosList.appendChild(emptyItem);
+            });
+    </script>
+</body>
+</html>
