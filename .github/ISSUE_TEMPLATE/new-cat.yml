@@ -1,1 +1,41 @@
 
+name: New Cat Content
+description: Add new cat content to the archive
+title: "[CAT]: "
+labels: ["content", "cat"]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: Title of the cat content
+      placeholder: "sleeping in the sun"
+    validations:
+      required: true
+  
+  - type: input
+    id: description
+    attributes:
+      label: Description
+      description: Short description
+      placeholder: "window ledge"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: content
+    attributes:
+      label: Content
+      description: Details about this cat moment
+      placeholder: Write about this cat moment...
+    validations:
+      required: true
+
+  - type: input
+    id: image
+    attributes:
+      label: Image URL (optional)
+      description: Link to a cat photo if available
+      placeholder: https://example.com/image.jpg
+    validations:
+      required: false
