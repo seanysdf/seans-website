@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>art | ART ARCHIVE</title>
+    <title>Art Archive | All Art</title>
     <style>
         body {
             background-color: #f8f8f8;
@@ -14,33 +14,28 @@
         }
         
         h1 {
-            font-size: 20px;
-            margin-bottom: 5px;
+            font-size: 24px;
+            margin-bottom: 20px;
             text-transform: uppercase;
+        }
+        
+        .item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
         }
         
         .date {
             color: #666;
             font-size: 12px;
-            margin-bottom: 20px;
+            margin-right: 10px;
         }
         
         .description {
             color: #444;
             font-style: italic;
-            margin-bottom: 20px;
-        }
-        
-        .content {
-            line-height: 1.6;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            font-size: 11px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
+            display: block;
+            margin-top: 5px;
         }
         
         a {
@@ -51,18 +46,60 @@
         a:hover {
             text-decoration: underline;
         }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>art</h1>
-    <div class="date">27.02.2025</div>
-    <div class="description">artttt</div>
-    <div class="image"><img src="_No response_" alt="art" style="max-width:100%;"></div>
-    <div class="content">
-        is it working please<br><br><img width="352" alt="Image" src="https://github.com/user-attachments/assets/bb13e7ab-dc9c-409d-ac39-33fdad292b64" />
+    <h1>All Art</h1>
+    <div id="art-list">
+        <!-- Content will be loaded here -->
     </div>
     <div class="footer">
         <a href="/">← back to archive</a>
     </div>
+
+    <script>
+        // Load art content
+        fetch('./data/art.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('No art content found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const artList = document.getElementById('art-list');
+                artList.innerHTML = ''; // Clear any existing content
+                
+                // Display all items
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'item';
+                        
+                        itemDiv.innerHTML = `
+                            <span class="date">${item.date}</span>
+                            <a href="${item.url}">${item.title}</a>
+                            ${item.description ? `<span class="description">${item.description}</span>` : ''}
+                            ${item.image ? `<div style="margin-top:10px;"><img src="${item.image}" alt="${item.title}" style="max-width:200px;"></div>` : ''}
+                        `;
+                        artList.appendChild(itemDiv);
+                    });
+                } else {
+                    artList.innerHTML = '<p>No art entries yet.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading art content:', error);
+                document.getElementById('art-list').innerHTML = '<p>No art entries yet.</p>';
+            });
+    </script>
 </body>
 </html>
