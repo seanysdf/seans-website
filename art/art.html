@@ -2,58 +2,9 @@
 <html>
 <head>
     <title>Art Archive | All Art</title>
+    <!-- Same styles as index.html -->
     <style>
-        body {
-            background-color: #f8f8f8;
-            font-family: "Lucida Console", Monaco, monospace;
-            margin: 0;
-            padding: 20px;
-            color: #222222;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
-        
-        .item {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .date {
-            color: #666;
-            font-size: 12px;
-            margin-right: 10px;
-        }
-        
-        .description {
-            color: #444;
-            font-style: italic;
-            display: block;
-            margin-top: 5px;
-        }
-        
-        a {
-            color: #000;
-            text-decoration: none;
-        }
-        
-        a:hover {
-            text-decoration: underline;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            font-size: 11px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-        }
+        /* Copy the styles from index.html */
     </style>
 </head>
 <body>
@@ -66,6 +17,11 @@
     </div>
 
     <script>
+        // Same createSafeImage function as in index.html
+        function createSafeImage(imageUrl, title, itemUrl) {
+            // Copy the function from index.html
+        }
+
         // Load art content
         fetch('./data/art.json?v=' + new Date().getTime())
             .then(response => {
@@ -84,12 +40,31 @@
                         const itemDiv = document.createElement('div');
                         itemDiv.className = 'item';
                         
-                        itemDiv.innerHTML = `
-                            <span class="date">${item.date}</span>
-                            <a href="${item.url}">${item.title}</a>
-                            ${item.description ? `<span class="description">${item.description}</span>` : ''}
-                            ${item.image ? `<div style="margin-top:10px;"><img src="${item.image}" alt="${item.title}" style="max-width:300px;"></div>` : ''}
-                        `;
+                        // Create date and title elements
+                        const dateSpan = document.createElement('span');
+                        dateSpan.className = 'date';
+                        dateSpan.textContent = item.date;
+                        itemDiv.appendChild(dateSpan);
+                        
+                        const titleLink = document.createElement('a');
+                        titleLink.href = item.url;
+                        titleLink.textContent = item.title;
+                        itemDiv.appendChild(titleLink);
+                        
+                        // Add description if available
+                        if (item.description) {
+                            const descSpan = document.createElement('span');
+                            descSpan.className = 'description';
+                            descSpan.textContent = item.description;
+                            itemDiv.appendChild(descSpan);
+                        }
+                        
+                        // Add image if available
+                        if (item.image) {
+                            const imgContainer = createSafeImage(item.image, item.title, item.url);
+                            itemDiv.appendChild(imgContainer);
+                        }
+                        
                         artList.appendChild(itemDiv);
                     });
                 } else {
