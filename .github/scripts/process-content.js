@@ -9,15 +9,16 @@ const issueBody = issueData.body;
 const issueLabels = issueData.labels.map(label => label.name);
 const issueCreatedAt = issueData.created_at;
 
-// Determine content type from labels
-const contentType = issueLabels.find(label => 
-  ['art', 'photos', 'journal', 'cat'].includes(label)
-);
+// Determine content type from title or labels
+let contentType = 'art'; // Default to art
+if (issueTitle.startsWith('[PHOTO]')) contentType = 'photos';
+if (issueTitle.startsWith('[JOURNAL]')) contentType = 'journal';
+if (issueTitle.startsWith('[CAT]')) contentType = 'cat';
 
-if (!contentType) {
-  console.log('No valid content type label found. Skipping processing.');
-  process.exit(0);
-}
+// Also check labels
+if (issueLabels.includes('photos')) contentType = 'photos';
+if (issueLabels.includes('journal')) contentType = 'journal';
+if (issueLabels.includes('cat')) contentType = 'cat';
 
 // Parse the form data from the issue body
 function extractField(body, fieldName) {
@@ -26,7 +27,7 @@ function extractField(body, fieldName) {
   return match ? match[1].trim() : '';
 }
 
-const title = extractField(issueBody, 'Title');
+const title = extractField(issueBody, 'Title') || issueTitle.replace(/^\[.*?\]\s*/, '');
 const description = extractField(issueBody, 'Description');
 const content = extractField(issueBody, 'Content');
 const image = extractField(issueBody, 'Image URL \\(optional\\)');
@@ -49,7 +50,7 @@ const newItem = {
   url: `${contentType}/${id}.html`
 };
 
-// Read existing data file or create a new one
+// Read existing data file
 const dataPath = `data/${contentType}.json`;
 let data = { items: [] };
 
