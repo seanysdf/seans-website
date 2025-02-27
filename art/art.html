@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Art Archive | All Art</title>
+    <title>ART ARCHIVE | All Art</title>
     <style>
-        /* Base Styles */
         body {
             background-color: #f8f8f8;
             font-family: "Lucida Console", Monaco, monospace;
@@ -14,101 +11,76 @@
             color: #222222;
             max-width: 800px;
             margin: 0 auto;
-            line-height: 1.5;
         }
         
-        /* Typography */
         h1 {
-            font-size: 24px;
-            margin-bottom: 30px;
+            font-size: 20px;
+            margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
         }
         
-        /* Content Items */
-        .item {
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        a:visited {
+            color: #555;
         }
         
         .date {
             color: #666;
             font-size: 12px;
-            margin-right: 10px;
+            display: inline-block;
+            width: 90px;
         }
         
         .description {
             color: #444;
-            font-style: italic;
-            display: block;
-            margin-top: 5px;
             font-size: 12px;
+            margin-left: 10px;
+            font-style: italic;
         }
         
-        /* Links */
-        a {
-            color: #000;
-            text-decoration: none;
-            transition: color 0.2s ease;
+        .item {
+            margin-bottom: 6px;
+            line-height: 1.4;
         }
         
-        a:hover {
-            color: #555;
-        }
-        
-        /* Image Preview Link */
-        .image-preview-link {
-            display: inline-block;
-            margin-top: 10px;
+        .footer {
+            margin-top: 30px;
             font-size: 11px;
             color: #666;
-            background-color: #f0f0f0;
-            padding: 5px 10px;
-            border-radius: 3px;
-            transition: background-color 0.2s ease;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
         }
         
-        .image-preview-link:hover {
-            background-color: #e0e0e0;
-            text-decoration: none;
-            color: #444;
+        .subtitle {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
         }
         
-        /* Loading State */
         .loading {
             color: #888;
             font-style: italic;
-            font-size: 14px;
-        }
-        
-        /* Empty State */
-        .empty-state {
-            color: #888;
-            font-style: italic;
-            font-size: 14px;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-        }
-        
-        /* Footer */
-        .footer {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
             font-size: 12px;
-            color: #666;
+            margin-left: 90px;
         }
     </style>
 </head>
 <body>
-    <h1>All Art</h1>
+    <h1>ALL ART</h1>
+    <div class="subtitle">complete archive of art entries</div>
+    
     <div id="art-list">
-        <p class="loading">Loading art entries...</p>
+        <div class="loading">Loading art entries...</div>
     </div>
+    
     <div class="footer">
         <a href="/">← back to archive</a>
     </div>
@@ -132,12 +104,13 @@
                         const itemDiv = document.createElement('div');
                         itemDiv.className = 'item';
                         
-                        // Create date and title elements
+                        // Create date span
                         const dateSpan = document.createElement('span');
                         dateSpan.className = 'date';
                         dateSpan.textContent = item.date;
                         itemDiv.appendChild(dateSpan);
                         
+                        // Create title link
                         const titleLink = document.createElement('a');
                         titleLink.href = item.url;
                         titleLink.textContent = item.title;
@@ -151,24 +124,23 @@
                             itemDiv.appendChild(descSpan);
                         }
                         
-                        // Add image preview link if there's an image
-                        if (item.image) {
-                            const previewLink = document.createElement('a');
-                            previewLink.href = item.url;
-                            previewLink.className = 'image-preview-link';
-                            previewLink.textContent = 'View with image →';
-                            itemDiv.appendChild(previewLink);
-                        }
-                        
                         artList.appendChild(itemDiv);
                     });
                 } else {
-                    artList.innerHTML = '<p class="empty-state">No art entries yet.</p>';
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = 'item';
+                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                    artList.appendChild(emptyItem);
                 }
             })
             .catch(error => {
                 console.error('Error loading art content:', error);
-                document.getElementById('art-list').innerHTML = '<p class="empty-state">No art entries yet.</p>';
+                const artList = document.getElementById('art-list');
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'item';
+                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                artList.innerHTML = '';
+                artList.appendChild(emptyItem);
             });
     </script>
 </body>
