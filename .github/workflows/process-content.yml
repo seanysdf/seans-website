@@ -24,10 +24,13 @@ jobs:
       - name: Create directories if they don't exist
         run: |
           mkdir -p data
-          mkdir -p art
-          mkdir -p photos
-          mkdir -p journal
-          mkdir -p cat
+          mkdir -p content/art
+          mkdir -p content/photos
+          mkdir -p content/journal
+          mkdir -p content/cat
+          mkdir -p content/videos
+          mkdir -p pages
+          mkdir -p css
       
       - name: Create empty data files if they don't exist
         run: |
@@ -35,263 +38,420 @@ jobs:
           [ -f data/photos.json ] || echo '{"items":[]}' > data/photos.json
           [ -f data/journal.json ] || echo '{"items":[]}' > data/journal.json
           [ -f data/cat.json ] || echo '{"items":[]}' > data/cat.json
+          [ -f data/videos.json ] || echo '{"items":[]}' > data/videos.json
       
-      - name: Process issue content
-        if: github.event_name == 'issues'
+      - name: Create CSS file if it doesn't exist
         run: |
-          # Create issue data file
-          echo '${{ toJSON(github.event.issue) }}' > issue_data.json
-          
-          # Create processing script
-          cat > process-issue.js << 'EOF'
-          const fs = require('fs');
-
-          // Read the issue data
-          const issueData = JSON.parse(fs.readFileSync('issue_data.json', 'utf8'));
-
-          // Get basic info
-          const title = issueData.title;
-          const body = issueData.body;
-          const createdAt = issueData.created_at;
-          const labels = issueData.labels || [];
-
-          // Determine content type from title or labels
-          let contentType = 'art'; // Default to art
-          if (title.toLowerCase().includes('[photo]') || labels.some(l => l.name.toLowerCase() === 'photo')) contentType = 'photos';
-          if (title.toLowerCase().includes('[journal]') || labels.some(l => l.name.toLowerCase() === 'journal')) contentType = 'journal';
-          if (title.toLowerCase().includes('[cat]') || labels.some(l => l.name.toLowerCase() === 'cat')) contentType = 'cat';
-
-          // Format date
-          const date = new Date(createdAt);
-          const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth()+1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-
-          // Create ID from title
-          const cleanTitle = title.replace(/\[[^\]]+\]/g, '').trim();
-          const id = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
-          // Extract fields from body
-          function extractField(body, fieldName) {
-            const regex = new RegExp(`### ${fieldName}\\s+([^#]*?)(?=###|$)`, 's');
-            const match = body.match(regex);
-            return match ? match[1].trim() : '';
-          }
-
-          const description = extractField(body, 'Description');
-          const content = extractField(body, 'Content');
-          const image = extractField(body, 'Image URL \\(optional\\)');
-
-          // Create the new item
-          const newItem = {
-            id: id,
-            title: cleanTitle,
-            date: formattedDate,
-            description: description || null,
-            content: content,
-            image: image || null,
-            url: `${contentType}/${id}.html`
-          };
-
-          // Read existing data
-          const dataPath = `data/${contentType}.json`;
-          let data = { items: [] };
-
-          if (fs.existsSync(dataPath)) {
-            try {
-              data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-            } catch (error) {
-              console.log(`Error reading ${dataPath}. Creating new file.`);
+          if [ ! -f css/style.css ]; then
+            cat > css/style.css << 'EOF'
+            body {
+                background-color: #f8f8f8;
+                font-family: "Lucida Console", Monaco, monospace;
+                margin: 0;
+                padding: 20px;
+                color: #222222;
+                max-width: 800px;
+                margin: 0 auto;
             }
-          }
-
-          // Add new item (or update existing one with same ID)
-          const existingIndex = data.items.findIndex(item => item.id === id);
-          if (existingIndex >= 0) {
-            data.items[existingIndex] = newItem;
-          } else {
-            data.items.unshift(newItem); // Add to beginning (newest first)
-          }
-
-          // Write updated data
-          fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-
-          // Create HTML file
-          const htmlContent = `<!DOCTYPE html>
-          <html>
-          <head>
-              <title>${cleanTitle} | ART ARCHIVE</title>
-              <style>
-                  body {
-                      background-color: #f8f8f8;
-                      font-family: "Lucida Console", Monaco, monospace;
-                      margin: 0;
-                      padding: 20px;
-                      color: #222222;
-                      max-width: 800px;
-                      margin: 0 auto;
-                  }
-                  
-                  h1 {
-                      font-size: 20px;
-                      margin-bottom: 5px;
-                      text-transform: uppercase;
-                  }
-                  
-                  .date {
-                      color: #666;
-                      font-size: 12px;
-                      margin-bottom: 20px;
-                  }
-                  
-                  .description {
-                      color: #444;
-                      font-style: italic;
-                      margin-bottom: 20px;
-                  }
-                  
-                  .content {
-                      line-height: 1.6;
-                      margin-top: 20px;
-                  }
-                  
-                  .image {
-                      margin: 20px 0;
-                  }
-                  
-                  .footer {
-                      margin-top: 30px;
-                      font-size: 11px;
-                      color: #666;
-                      border-top: 1px solid #ccc;
-                      padding-top: 10px;
-                  }
-                  
-                  a {
-                      color: #000;
-                      text-decoration: none;
-                  }
-                  
-                  a:hover {
-                      text-decoration: underline;
-                  }
-              </style>
-          </head>
-          <body>
-              <h1>${cleanTitle}</h1>
-              <div class="date">${formattedDate}</div>
-              ${description ? `<div class="description">${description}</div>` : ''}
-              ${image ? `<div class="image"><img src="${image}" alt="${cleanTitle}" style="max-width:100%;"></div>` : ''}
-              <div class="content">
-                  ${content.replace(/\n/g, '<br>')}
-              </div>
-              <div class="footer">
-                  <a href="/">← back to archive</a>
-              </div>
-          </body>
-          </html>`;
-
-          fs.writeFileSync(`${contentType}/${id}.html`, htmlContent);
-          console.log(`Created/updated entry: ${cleanTitle} (${contentType}/${id}.html)`);
-          EOF
-          
-          # Run the processing script
-          node process-issue.js
+            
+            h1 {
+                font-size: 20px;
+                margin-bottom: 5px;
+                text-transform: uppercase;
+            }
+            
+            h2 {
+                font-size: 16px;
+                margin-top: 25px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid #000;
+                padding-bottom: 3px;
+                text-transform: uppercase;
+            }
+            
+            a {
+                color: #000;
+                text-decoration: none;
+            }
+            
+            a:hover {
+                text-decoration: underline;
+            }
+            
+            a:visited {
+                color: #555;
+            }
+            
+            .date {
+                color: #666;
+                font-size: 12px;
+                display: inline-block;
+                width: 90px;
+            }
+            
+            .description {
+                color: #444;
+                font-size: 12px;
+                margin-left: 10px;
+                font-style: italic;
+            }
+            
+            .item {
+                margin-bottom: 6px;
+                line-height: 1.4;
+            }
+            
+            .footer {
+                margin-top: 30px;
+                font-size: 11px;
+                color: #666;
+                border-top: 1px solid #ccc;
+                padding-top: 10px;
+            }
+            
+            .random {
+                margin: 20px 0;
+                padding: 10px;
+                border: 1px solid #ccc;
+                background-color: #f0f0f0;
+                font-family: "Courier New", monospace;
+            }
+            
+            .subtitle {
+                color: #666;
+                font-size: 12px;
+                margin-bottom: 20px;
+            }
+            
+            .cat-section {
+                margin: 20px 0;
+            }
+            
+            .cat-item {
+                margin-bottom: 8px;
+            }
+            
+            .view-all {
+                text-align: right;
+                margin-top: 5px;
+                font-size: 12px;
+            }
+            
+            .loading {
+                color: #888;
+                font-style: italic;
+                font-size: 12px;
+                margin-left: 90px;
+            }
+            
+            .content {
+                line-height: 1.6;
+                margin-top: 20px;
+            }
+            
+            .image {
+                margin: 20px 0;
+            }
+            
+            .video-container {
+                margin: 20px 0;
+                position: relative;
+                padding-bottom: 56.25%; /* 16:9 aspect ratio */
+                height: 0;
+                overflow: hidden;
+            }
+            
+            .video-container iframe,
+            .video-container video {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            EOF
+          fi
       
-      - name: Create sample content for manual runs
-        if: github.event_name == 'workflow_dispatch'
+      - name: Create section pages if they don't exist
         run: |
-          # Create a new sample entry
-          echo '{
-            "items": [
-              {
-                "id": "sample-artwork",
-                "title": "Sample Artwork",
-                "date": "01.06.2024",
-                "description": "Acrylic on canvas, 18×24\"",
-                "content": "This is a sample artwork created to test the system.",
-                "image": "https://placehold.co/600x400?text=Sample+Artwork",
-                "url": "art/sample-artwork.html"
-              }
-            ]
-          }' > data/art.json
+          # Create art.html if it doesn't exist
+          if [ ! -f pages/art.html ]; then
+            cat > pages/art.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>ART ARCHIVE | All Art</title>
+                <link rel="stylesheet" href="../css/style.css">
+            </head>
+            <body>
+                <h1>ALL ART</h1>
+                <div class="subtitle">complete archive of art entries</div>
+                
+                <div id="art-list">
+                    <div class="loading">Loading art entries...</div>
+                </div>
+                
+                <div class="footer">
+                    <a href="/">← back to archive</a>
+                </div>
+
+                <script>
+                    // Load art content
+                    fetch('../data/art.json?v=' + new Date().getTime())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('No art content found');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const artList = document.getElementById('art-list');
+                            artList.innerHTML = ''; // Clear loading message
+                            
+                            // Display all items
+                            if (data.items && data.items.length > 0) {
+                                data.items.forEach(item => {
+                                    const itemDiv = document.createElement('div');
+                                    itemDiv.className = 'item';
+                                    
+                                    // Create date span
+                                    const dateSpan = document.createElement('span');
+                                    dateSpan.className = 'date';
+                                    dateSpan.textContent = item.date;
+                                    itemDiv.appendChild(dateSpan);
+                                    
+                                    // Create title link
+                                    const titleLink = document.createElement('a');
+                                    titleLink.href = '../' + item.url;
+                                    titleLink.textContent = item.title;
+                                    itemDiv.appendChild(titleLink);
+                                    
+                                    // Add description if available
+                                    if (item.description) {
+                                        const descSpan = document.createElement('span');
+                                        descSpan.className = 'description';
+                                        descSpan.textContent = item.description;
+                                        itemDiv.appendChild(descSpan);
+                                    }
+                                    
+                                    artList.appendChild(itemDiv);
+                                });
+                            } else {
+                                const emptyItem = document.createElement('div');
+                                emptyItem.className = 'item';
+                                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                                artList.appendChild(emptyItem);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading art content:', error);
+                            const artList = document.getElementById('art-list');
+                            const emptyItem = document.createElement('div');
+                            emptyItem.className = 'item';
+                            emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                            artList.innerHTML = '';
+                            artList.appendChild(emptyItem);
+                        });
+                </script>
+            </body>
+            </html>
+            EOF
+          fi
           
-          # Create the HTML file
-          echo '<!DOCTYPE html>
-          <html>
-          <head>
-              <title>Sample Artwork | ART ARCHIVE</title>
-              <style>
-                  body {
-                      background-color: #f8f8f8;
-                      font-family: "Lucida Console", Monaco, monospace;
-                      margin: 0;
-                      padding: 20px;
-                      color: #222222;
-                      max-width: 800px;
-                      margin: 0 auto;
-                  }
-                  
-                  h1 {
-                      font-size: 20px;
-                      margin-bottom: 5px;
-                      text-transform: uppercase;
-                  }
-                  
-                  .date {
-                      color: #666;
-                      font-size: 12px;
-                      margin-bottom: 20px;
-                  }
-                  
-                  .description {
-                      color: #444;
-                      font-style: italic;
-                      margin-bottom: 20px;
-                  }
-                  
-                  .content {
-                      line-height: 1.6;
-                      margin-top: 20px;
-                  }
-                  
-                  .image {
-                      margin: 20px 0;
-                  }
-                  
-                  .footer {
-                      margin-top: 30px;
-                      font-size: 11px;
-                      color: #666;
-                      border-top: 1px solid #ccc;
-                      padding-top: 10px;
-                  }
-                  
-                  a {
-                      color: #000;
-                      text-decoration: none;
-                  }
-                  
-                  a:hover {
-                      text-decoration: underline;
-                  }
-              </style>
-          </head>
-          <body>
-              <h1>Sample Artwork</h1>
-              <div class="date">01.06.2024</div>
-              <div class="description">Acrylic on canvas, 18×24"</div>
-              <div class="image"><img src="https://placehold.co/600x400?text=Sample+Artwork" alt="Sample Artwork" style="max-width:100%;"></div>
-              <div class="content">
-                  This is a sample artwork created to test the system.
-              </div>
-              <div class="footer">
-                  <a href="/">← back to archive</a>
-              </div>
-          </body>
-          </html>' > art/sample-artwork.html
-      
-      - name: Commit changes
-        uses: EndBug/add-and-commit@v9
-        with:
-          message: 'Update content'
-          add: '.'
-          default_author: github_actions
+          # Create photos.html if it doesn't exist
+          if [ ! -f pages/photos.html ]; then
+            cat > pages/photos.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>ART ARCHIVE | All Photos</title>
+                <link rel="stylesheet" href="../css/style.css">
+            </head>
+            <body>
+                <h1>ALL PHOTOS</h1>
+                <div class="subtitle">complete archive of photo entries</div>
+                
+                <div id="photos-list">
+                    <div class="loading">Loading photo entries...</div>
+                </div>
+                
+                <div class="footer">
+                    <a href="/">← back to archive</a>
+                </div>
+
+                <script>
+                    // Load photos content
+                    fetch('../data/photos.json?v=' + new Date().getTime())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('No photos content found');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const photosList = document.getElementById('photos-list');
+                            photosList.innerHTML = ''; // Clear loading message
+                            
+                            // Display all items
+                            if (data.items && data.items.length > 0) {
+                                data.items.forEach(item => {
+                                    const itemDiv = document.createElement('div');
+                                    itemDiv.className = 'item';
+                                    
+                                    // Create date span
+                                    const dateSpan = document.createElement('span');
+                                    dateSpan.className = 'date';
+                                    dateSpan.textContent = item.date;
+                                    itemDiv.appendChild(dateSpan);
+                                    
+                                    // Create title link
+                                    const titleLink = document.createElement('a');
+                                    titleLink.href = '../' + item.url;
+                                    titleLink.textContent = item.title;
+                                    itemDiv.appendChild(titleLink);
+                                    
+                                    // Add description if available
+                                    if (item.description) {
+                                        const descSpan = document.createElement('span');
+                                        descSpan.className = 'description';
+                                        descSpan.textContent = item.description;
+                                        itemDiv.appendChild(descSpan);
+                                    }
+                                    
+                                    photosList.appendChild(itemDiv);
+                                });
+                            } else {
+                                const emptyItem = document.createElement('div');
+                                emptyItem.className = 'item';
+                                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                                photosList.appendChild(emptyItem);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading photos content:', error);
+                            const photosList = document.getElementById('photos-list');
+                            const emptyItem = document.createElement('div');
+                            emptyItem.className = 'item';
+                            emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                            photosList.innerHTML = '';
+                            photosList.appendChild(emptyItem);
+                        });
+                </script>
+            </body>
+            </html>
+            EOF
+          fi
+          
+          # Create journal.html if it doesn't exist
+          if [ ! -f pages/journal.html ]; then
+            cat > pages/journal.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>ART ARCHIVE | All Journal Entries</title>
+                <link rel="stylesheet" href="../css/style.css">
+            </head>
+            <body>
+                <h1>ALL JOURNAL ENTRIES</h1>
+                <div class="subtitle">thoughts, notes, and observations</div>
+                
+                <div id="journal-list">
+                    <div class="loading">Loading journal entries...</div>
+                </div>
+                
+                <div class="footer">
+                    <a href="/">← back to archive</a>
+                </div>
+
+                <script>
+                    // Load journal content
+                    fetch('../data/journal.json?v=' + new Date().getTime())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('No journal content found');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const journalList = document.getElementById('journal-list');
+                            journalList.innerHTML = ''; // Clear loading message
+                            
+                            // Display all items
+                            if (data.items && data.items.length > 0) {
+                                data.items.forEach(item => {
+                                    const itemDiv = document.createElement('div');
+                                    itemDiv.className = 'item';
+                                    
+                                    // Create date span
+                                    const dateSpan = document.createElement('span');
+                                    dateSpan.className = 'date';
+                                    dateSpan.textContent = item.date;
+                                    itemDiv.appendChild(dateSpan);
+                                    
+                                    // Create title link
+                                    const titleLink = document.createElement('a');
+                                    titleLink.href = '../' + item.url;
+                                    titleLink.textContent = item.title;
+                                    itemDiv.appendChild(titleLink);
+                                    
+                                    journalList.appendChild(itemDiv);
+                                });
+                            } else {
+                                const emptyItem = document.createElement('div');
+                                emptyItem.className = 'item';
+                                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                                journalList.appendChild(emptyItem);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading journal content:', error);
+                            const journalList = document.getElementById('journal-list');
+                            const emptyItem = document.createElement('div');
+                            emptyItem.className = 'item';
+                            emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                            journalList.innerHTML = '';
+                            journalList.appendChild(emptyItem);
+                        });
+                </script>
+            </body>
+            </html>
+            EOF
+          fi
+          
+          # Create cat.html if it doesn't exist
+          if [ ! -f pages/cat.html ]; then
+            cat > pages/cat.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>ART ARCHIVE | All Cat Content</title>
+                <link rel="stylesheet" href="../css/style.css">
+            </head>
+            <body>
+                <h1>ALL CAT CONTENT</h1>
+                <div class="subtitle">feline adventures and observations</div>
+                
+                <div id="cat-list" class="cat-section">
+                    <div class="loading">Loading cat content...</div>
+                </div>
+                
+                <div class="footer">
+                    <a href="/">← back to archive</a>
+                </div>
+
+                <script>
+                    // Load cat content
+                    fetch('../data/cat.json?v=' + new Date().getTime())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('No cat content found');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const catList = document.getElementById('cat-list');
+                            catList.innerHTML = ''; // Clear loading message
+                            
+                            // Display all items
+                            if (data.items && data.items.length > 0) {
+                                data.items.forEach(
