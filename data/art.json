@@ -1,22 +1,13 @@
 {
   "items": [
     {
-      "id": "art",
-      "title": "art",
+      "id": "dsadas",
+      "title": "dsadas",
       "date": "27.02.2025",
-      "description": "artttt",
-      "content": "is it working please\n\n<img width=\"352\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/bb13e7ab-dc9c-409d-ac39-33fdad292b64\" />",
+      "description": "sadsad",
+      "content": "asdsadsa\n\n<img width=\"352\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/a4334087-ee76-456a-8c00-cb1dc6c74e46\" />",
       "image": "_No response_",
-      "url": "art/art.html"
-    },
-    {
-      "id": "test-entry",
-      "title": "Test Entry",
-      "date": "01.01.2024",
-      "description": "This is a test entry",
-      "content": "Content for test entry",
-      "image": null,
-      "url": "art/test-entry.html"
+      "url": "art/dsadas.html"
     }
   ]
 }
