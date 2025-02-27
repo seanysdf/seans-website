@@ -37,7 +37,7 @@ jobs:
           echo '${{ toJSON(github.event.issue) }}' > issue_data.json
 
           # Create processing script
-          cat > process-issue.js << 'EOF'
+          cat > process-issue.js <<EOF
 const fs = require('fs');
 
 try {
@@ -147,39 +147,6 @@ EOF
         <a href="archive.html">complete archive</a> | 
         <a href="about.html">about</a>
     </div>
-
-    <script>
-        function loadContent(contentType, elementId, limit = 5) {
-            fetch(\`./data/\${contentType}.json?v=\${new Date().getTime()}\`)
-                .then(response => response.json())
-                .then(data => {
-                    const contentSection = document.getElementById(elementId);
-                    contentSection.innerHTML = '';
-
-                    if (data.items && data.items.length > 0) {
-                        data.items.slice(0, limit).forEach(item => {
-                            const itemDiv = document.createElement('div');
-                            itemDiv.className = 'item';
-                            itemDiv.innerHTML = \`
-                                <span class="date">\${item.date}</span>
-                                <a href="\${item.url}">\${item.title}</a>
-                            \`;
-                            contentSection.appendChild(itemDiv);
-                        });
-                    } else {
-                        contentSection.innerHTML = '<div class="loading">No entries yet</div>';
-                    }
-                })
-                .catch(error => console.error("Error loading content:", error));
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            ['art', 'photos', 'journal', 'cat', 'videos'].forEach(contentType => {
-                loadContent(contentType, \`\${contentType}-section\`);
-            });
-        });
-    </script>
-
 </body>
 </html>
 EOF
