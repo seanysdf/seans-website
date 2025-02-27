@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Art Archive | All Art</title>
+    <style>
+        body {
+            background-color: #f8f8f8;
+            font-family: "Lucida Console", Monaco, monospace;
+            margin: 0;
+            padding: 20px;
+            color: #222222;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        .item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .date {
+            color: #666;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .description {
+            color: #444;
+            font-style: italic;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>All Art</h1>
+    <div id="art-list">
+        <!-- Content will be loaded here -->
+    </div>
+    <div class="footer">
+        <a href="/">← back to archive</a>
+    </div>
+
+    <script>
+        // Load art content
+        fetch('./data/art.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('No art content found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const artList = document.getElementById('art-list');
+                artList.innerHTML = ''; // Clear any existing content
+                
+                // Display all items
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'item';
+                        
+                        itemDiv.innerHTML = `
+                            <span class="date">${item.date}</span>
+                            <a href="${item.url}">${item.title}</a>
+                            ${item.description ? `<span class="description">${item.description}</span>` : ''}
+                            ${item.image ? `<div style="margin-top:10px;"><img src="${item.image}" alt="${item.title}" style="max-width:200px;"></div>` : ''}
+                        `;
+                        artList.appendChild(itemDiv);
+                    });
+                } else {
+                    artList.innerHTML = '<p>No art entries yet.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading art content:', error);
+                document.getElementById('art-list').innerHTML = '<p>No art entries yet.</p>';
+            });
+    </script>
+</body>
+</html>
