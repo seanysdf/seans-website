@@ -3,6 +3,7 @@ name: Process New Content
 on:
   issues:
     types: [opened, edited]
+  workflow_dispatch:  # Allows manual triggering
 
 permissions:
   contents: write
@@ -28,24 +29,110 @@ jobs:
           mkdir -p journal
           mkdir -p cat
       
-      - name: Create empty JSON files if they don't exist
-        run: |
-          [ -f data/art.json ] || echo '{"items":[]}' > data/art.json
-          [ -f data/photos.json ] || echo '{"items":[]}' > data/photos.json
-          [ -f data/journal.json ] || echo '{"items":[]}' > data/journal.json
-          [ -f data/cat.json ] || echo '{"items":[]}' > data/cat.json
-      
       - name: Process Issue Content
         run: |
+          # Create initial empty data files
+          echo '{"items":[]}' > data/art.json
+          echo '{"items":[]}' > data/photos.json
+          echo '{"items":[]}' > data/journal.json
+          echo '{"items":[]}' > data/cat.json
+          
           # Create issue data file
           echo '${{ toJSON(github.event.issue) }}' > issue_data.json
           
-          # Run the processing script
-          node .github/scripts/process-content.js
+          # If triggered manually, create a test entry
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo '{
+              "items": [
+                {
+                  "id": "my-new-artwork",
+                  "title": "My New Artwork",
+                  "date": "01.06.2024",
+                  "description": "Mixed media on canvas, 24×36\"",
+                  "content": "This is a sample artwork created to test the system. It represents my exploration of color and form.",
+                  "image": "https://placehold.co/600x400?text=New+Artwork",
+                  "url": "art/my-new-artwork.html"
+                }
+              ]
+            }' > data/art.json
+            
+            mkdir -p art
+            echo '<!DOCTYPE html>
+            <html>
+            <head>
+                <title>My New Artwork | ART ARCHIVE</title>
+                <style>
+                    body {
+                        background-color: #f8f8f8;
+                        font-family: "Lucida Console", Monaco, monospace;
+                        margin: 0;
+                        padding: 20px;
+                        color: #222222;
+                        max-width: 800px;
+                        margin: 0 auto;
+                    }
+                    
+                    h1 {
+                        font-size: 20px;
+                        margin-bottom: 5px;
+                        text-transform: uppercase;
+                    }
+                    
+                    .date {
+                        color: #666;
+                        font-size: 12px;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .description {
+                        color: #444;
+                        font-style: italic;
+                        margin-bottom: 20px;
+                    }
+                    
+                    .content {
+                        line-height: 1.6;
+                    }
+                    
+                    .footer {
+                        margin-top: 30px;
+                        font-size: 11px;
+                        color: #666;
+                        border-top: 1px solid #ccc;
+                        padding-top: 10px;
+                    }
+                    
+                    a {
+                        color: #000;
+                        text-decoration: none;
+                    }
+                    
+                    a:hover {
+                        text-decoration: underline;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>My New Artwork</h1>
+                <div class="date">01.06.2024</div>
+                <div class="description">Mixed media on canvas, 24×36"</div>
+                <div class="image"><img src="https://placehold.co/600x400?text=New+Artwork" alt="My New Artwork" style="max-width:100%;"></div>
+                <div class="content">
+                    This is a sample artwork created to test the system. It represents my exploration of color and form.
+                </div>
+                <div class="footer">
+                    <a href="/">← back to archive</a>
+                </div>
+            </body>
+            </html>' > art/my-new-artwork.html
+          else
+            # Run the processing script for real issues
+            node .github/scripts/process-content.js
+          fi
       
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'Add content from issue #${{ github.event.issue.number }}'
+          message: 'Update content files'
           add: '.'
           default_author: github_actions
