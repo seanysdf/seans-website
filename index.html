@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Art Archive</title>
+    <title>ART ARCHIVE</title>
     <style>
-        /* Base Styles */
         body {
             background-color: #f8f8f8;
             font-family: "Lucida Console", Monaco, monospace;
@@ -14,169 +11,149 @@
             color: #222222;
             max-width: 800px;
             margin: 0 auto;
-            line-height: 1.5;
         }
         
-        /* Typography */
         h1 {
-            font-size: 24px;
-            margin-bottom: 30px;
+            font-size: 20px;
+            margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
         }
         
         h2 {
-            font-size: 18px;
-            margin-top: 40px;
-            margin-bottom: 15px;
+            font-size: 16px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
-        /* Content Items */
-        .item {
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        a:visited {
+            color: #555;
         }
         
         .date {
             color: #666;
             font-size: 12px;
-            margin-right: 10px;
+            display: inline-block;
+            width: 90px;
         }
         
         .description {
             color: #444;
+            font-size: 12px;
+            margin-left: 10px;
             font-style: italic;
-            display: block;
+        }
+        
+        .item {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        .random {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            font-family: "Courier New", monospace;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .cat-section {
+            margin: 20px 0;
+        }
+        
+        .cat-item {
+            margin-bottom: 8px;
+        }
+        
+        .view-all {
+            text-align: right;
             margin-top: 5px;
             font-size: 12px;
         }
         
-        /* Links */
-        a {
-            color: #000;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-        
-        a:hover {
-            color: #555;
-        }
-        
-        /* Section Containers */
-        .section {
-            margin-bottom: 40px;
-        }
-        
-        /* View All Links */
-        .view-all {
-            text-align: right;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        
-        .view-all a {
-            display: inline-block;
-            padding: 3px 8px;
-            background-color: #f0f0f0;
-            border-radius: 3px;
-            transition: background-color 0.2s ease;
-        }
-        
-        .view-all a:hover {
-            background-color: #e0e0e0;
-            text-decoration: none;
-        }
-        
-        /* Image Preview Link */
-        .image-preview-link {
-            display: inline-block;
-            margin-top: 10px;
-            font-size: 11px;
-            color: #666;
-            background-color: #f0f0f0;
-            padding: 5px 10px;
-            border-radius: 3px;
-            transition: background-color 0.2s ease;
-        }
-        
-        .image-preview-link:hover {
-            background-color: #e0e0e0;
-            text-decoration: none;
-            color: #444;
-        }
-        
-        /* Loading State */
         .loading {
             color: #888;
             font-style: italic;
-            font-size: 14px;
-        }
-        
-        /* Empty State */
-        .empty-state {
-            color: #888;
-            font-style: italic;
-            font-size: 14px;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-        }
-        
-        /* Footer */
-        .footer {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
             font-size: 12px;
-            color: #666;
-            text-align: center;
+            margin-left: 90px;
         }
     </style>
 </head>
 <body>
-    <h1>Art Archive</h1>
+    <h1>ART ARCHIVE</h1>
+    <div class="subtitle">personal collection of works / updated irregularly</div>
     
-    <div class="section">
-        <h2>Art</h2>
-        <div id="art-section">
-            <p class="loading">Loading art entries...</p>
-        </div>
+    <h2>ART</h2>
+    <div id="art-section">
+        <div class="loading">Loading art entries...</div>
     </div>
     
-    <div class="section">
-        <h2>Photos</h2>
-        <div id="photos-section">
-            <p class="loading">Loading photo entries...</p>
-        </div>
+    <h2>PHOTOS</h2>
+    <div id="photos-section">
+        <div class="loading">Loading photo entries...</div>
     </div>
     
-    <div class="section">
-        <h2>Journal</h2>
-        <div id="journal-section">
-            <p class="loading">Loading journal entries...</p>
-        </div>
+    <h2>JOURNAL</h2>
+    <div id="journal-section">
+        <div class="loading">Loading journal entries...</div>
     </div>
     
-    <div class="section">
-        <h2>My Cat</h2>
-        <div id="cat-section">
-            <p class="loading">Loading cat entries...</p>
-        </div>
+    <h2>MY CAT</h2>
+    <div id="cat-section" class="cat-section">
+        <div class="loading">Loading cat content...</div>
+    </div>
+    
+    <h2>SOMETHING RANDOM</h2>
+    
+    <div class="random">
+    found a roll of film from 2019 under my bed. getting it developed tomorrow.<br>
+    <br>
+    current studio playlist:<br>
+    - boards of canada - music has the right to children<br>
+    - autechre - amber<br>
+    - aphex twin - selected ambient works 85-92<br>
+    - burial - untrue<br>
+    <br>
+    dream from last night: standing in an empty museum where all the paintings were actually windows<br>
+    <br>
+    next experiment: trying to create a camera obscura in my bathroom
     </div>
     
     <div class="footer">
-        Art Archive &copy; 2024
+        last updated: <span id="last-updated-date">15.05.2024</span> | no images loaded = faster browsing<br>
+        <a href="mailto:artist@example.com">contact</a> | 
+        <a href="archive.html">complete archive</a> | 
+        <a href="about.html">about</a>
     </div>
 
     <script>
         // Function to load content from JSON file
         function loadContent(contentType, elementId, limit = 5) {
-            // Add cache-busting parameter
             fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
                 .then(response => {
                     if (!response.ok) {
@@ -190,16 +167,22 @@
                     
                     // Display the most recent items
                     if (data.items && data.items.length > 0) {
+                        // Update the last updated date
+                        if (data.items[0] && data.items[0].date) {
+                            document.getElementById('last-updated-date').textContent = data.items[0].date;
+                        }
+                        
                         data.items.slice(0, limit).forEach(item => {
                             const itemDiv = document.createElement('div');
-                            itemDiv.className = 'item';
+                            itemDiv.className = contentType === 'cat' ? 'cat-item' : 'item';
                             
-                            // Create date and title elements
+                            // Create date span
                             const dateSpan = document.createElement('span');
                             dateSpan.className = 'date';
                             dateSpan.textContent = item.date;
                             itemDiv.appendChild(dateSpan);
                             
+                            // Create title link
                             const titleLink = document.createElement('a');
                             titleLink.href = item.url;
                             titleLink.textContent = item.title;
@@ -213,15 +196,6 @@
                                 itemDiv.appendChild(descSpan);
                             }
                             
-                            // Add image preview link if there's an image
-                            if (item.image) {
-                                const previewLink = document.createElement('a');
-                                previewLink.href = item.url;
-                                previewLink.className = 'image-preview-link';
-                                previewLink.textContent = 'View with image →';
-                                itemDiv.appendChild(previewLink);
-                            }
-                            
                             contentSection.appendChild(itemDiv);
                         });
                         
@@ -233,12 +207,20 @@
                             contentSection.appendChild(seeAllDiv);
                         }
                     } else {
-                        contentSection.innerHTML = `<p class="empty-state">No ${contentType} entries yet.</p>`;
+                        const emptyItem = document.createElement('div');
+                        emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
+                        emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                        contentSection.appendChild(emptyItem);
                     }
                 })
                 .catch(error => {
                     console.error(`Error loading ${contentType} content:`, error);
-                    document.getElementById(elementId).innerHTML = `<p class="empty-state">No ${contentType} entries yet.</p>`;
+                    const contentSection = document.getElementById(elementId);
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
+                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                    contentSection.innerHTML = '';
+                    contentSection.appendChild(emptyItem);
                 });
         }
 
@@ -248,6 +230,11 @@
             loadContent('photos', 'photos-section');
             loadContent('journal', 'journal-section');
             loadContent('cat', 'cat-section');
+            
+            // Set today's date as the default
+            const today = new Date();
+            const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth()+1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+            document.getElementById('last-updated-date').textContent = formattedDate;
         });
     </script>
 </body>
