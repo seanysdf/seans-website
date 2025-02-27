@@ -59,7 +59,7 @@
 <body>
     <h1>All Art</h1>
     <div id="art-list">
-        <!-- Content will be loaded here -->
+        <p>Loading art entries...</p>
     </div>
     <div class="footer">
         <a href="/">← back to archive</a>
@@ -67,7 +67,7 @@
 
     <script>
         // Load art content
-        fetch('./data/art.json')
+        fetch('./data/art.json?v=' + new Date().getTime())
             .then(response => {
                 if (!response.ok) {
                     throw new Error('No art content found');
@@ -76,7 +76,7 @@
             })
             .then(data => {
                 const artList = document.getElementById('art-list');
-                artList.innerHTML = ''; // Clear any existing content
+                artList.innerHTML = ''; // Clear loading message
                 
                 // Display all items
                 if (data.items && data.items.length > 0) {
@@ -88,7 +88,7 @@
                             <span class="date">${item.date}</span>
                             <a href="${item.url}">${item.title}</a>
                             ${item.description ? `<span class="description">${item.description}</span>` : ''}
-                            ${item.image ? `<div style="margin-top:10px;"><img src="${item.image}" alt="${item.title}" style="max-width:200px;"></div>` : ''}
+                            ${item.image ? `<div style="margin-top:10px;"><img src="${item.image}" alt="${item.title}" style="max-width:300px;"></div>` : ''}
                         `;
                         artList.appendChild(itemDiv);
                     });
