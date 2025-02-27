@@ -27,7 +27,9 @@
         }
         
         .item {
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
         
         .date {
@@ -51,6 +53,20 @@
         
         a:hover {
             text-decoration: underline;
+        }
+        
+        .thumbnail {
+            margin-top: 10px;
+            max-width: 200px;
+            max-height: 150px;
+            object-fit: contain;
+            background-color: #f0f0f0;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .thumbnail-container {
+            margin-top: 10px;
         }
         
         .section {
@@ -90,8 +106,44 @@
     </div>
 
     <script>
+        // Function to safely load an image with fallback
+        function createSafeImage(imageUrl, title, itemUrl) {
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'thumbnail-container';
+            
+            const link = document.createElement('a');
+            link.href = itemUrl;
+            
+            const img = document.createElement('img');
+            img.className = 'thumbnail';
+            img.alt = title;
+            
+            // Set up error handling before setting src
+            img.onerror = function() {
+                console.error(`Failed to load image: ${imageUrl}`);
+                // Try with a proxy as fallback (if it's a GitHub attachment)
+                if (imageUrl.includes('github.com/user-attachments')) {
+                    console.log("Trying to load GitHub attachment via proxy...");
+                    // Use a simple CORS proxy or a placeholder
+                    img.src = 'https://placehold.co/200x150?text=Image+Available+in+Detail+View';
+                    img.alt = 'Image available in detail view';
+                } else {
+                    // Use a placeholder for non-GitHub images
+                    img.src = 'https://placehold.co/200x150?text=Image+Error';
+                }
+            };
+            
+            // Set the source last (after setting up error handler)
+            img.src = imageUrl;
+            
+            link.appendChild(img);
+            imgContainer.appendChild(link);
+            return imgContainer;
+        }
+
         // Function to load content from JSON file
         function loadContent(contentType, elementId, limit = 5) {
+            // Add cache-busting parameter
             fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
                 .then(response => {
                     if (!response.ok) {
@@ -100,6 +152,7 @@
                     return response.json();
                 })
                 .then(data => {
+                    console.log(`Loaded ${contentType} data:`, data); // Debug output
                     const contentSection = document.getElementById(elementId);
                     contentSection.innerHTML = ''; // Clear loading message
                     
@@ -109,12 +162,32 @@
                             const itemDiv = document.createElement('div');
                             itemDiv.className = 'item';
                             
-                            itemDiv.innerHTML = `
-                                <span class="date">${item.date}</span>
-                                <a href="${item.url}">${item.title}</a>
-                                ${item.description ? `<span class="description">${item.description}</span>` : ''}
-                                ${item.image ? `<div style="margin-top:5px;"><img src="${item.image}" alt="${item.title}" style="max-width:150px;"></div>` : ''}
-                            `;
+                            // Create date and title elements
+                            const dateSpan = document.createElement('span');
+                            dateSpan.className = 'date';
+                            dateSpan.textContent = item.date;
+                            itemDiv.appendChild(dateSpan);
+                            
+                            const titleLink = document.createElement('a');
+                            titleLink.href = item.url;
+                            titleLink.textContent = item.title;
+                            itemDiv.appendChild(titleLink);
+                            
+                            // Add description if available
+                            if (item.description) {
+                                const descSpan = document.createElement('span');
+                                descSpan.className = 'description';
+                                descSpan.textContent = item.description;
+                                itemDiv.appendChild(descSpan);
+                            }
+                            
+                            // Add image if available
+                            if (item.image) {
+                                console.log(`Processing image for ${item.title}: ${item.image}`);
+                                const imgContainer = createSafeImage(item.image, item.title, item.url);
+                                itemDiv.appendChild(imgContainer);
+                            }
+                            
                             contentSection.appendChild(itemDiv);
                         });
                         
@@ -142,6 +215,16 @@
             loadContent('photos', 'photos-section');
             loadContent('journal', 'journal-section');
             loadContent('cat', 'cat-section');
+            
+            // Debug information
+            console.log("Page loaded. Checking for images in 2 seconds...");
+            setTimeout(function() {
+                const images = document.querySelectorAll('img');
+                console.log(`Found ${images.length} images on the page`);
+                images.forEach((img, i) => {
+                    console.log(`Image ${i+1} src: ${img.src}`);
+                });
+            }, 2000);
         });
     </script>
 </body>
