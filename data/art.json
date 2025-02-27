@@ -1,6 +1,15 @@
 {
   "items": [
     {
+      "id": "art",
+      "title": "art",
+      "date": "27.02.2025",
+      "description": "artttt",
+      "content": "is it working please\n\n<img width=\"352\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/bb13e7ab-dc9c-409d-ac39-33fdad292b64\" />",
+      "image": "_No response_",
+      "url": "art/art.html"
+    },
+    {
       "id": "test-entry",
       "title": "Test Entry",
       "date": "01.01.2024",
