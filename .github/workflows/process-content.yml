@@ -93,42 +93,6 @@ jobs:
 
               console.log(\`✅ Successfully added item to \${dataPath}\`);
 
-              // 🔥 Now update index.html 🔥
-              const htmlPath = 'index.html';
-              if (fs.existsSync(htmlPath)) {
-                  let htmlContent = fs.readFileSync(htmlPath, 'utf8');
-
-                  // Find section for this content type
-                  const sectionRegex = new RegExp(\`<div id="\${contentType}-section">([\\s\\S]*?)<\\/div>\`);
-                  const match = htmlContent.match(sectionRegex);
-
-                  if (match) {
-                      console.log(\`🔄 Updating \${contentType} section in index.html...\`);
-
-                      let newSectionContent = \`<div id="\${contentType}-section">\`;
-                      data.items.slice(0, 5).forEach(item => {
-                          newSectionContent += \`
-                              <div class="item">
-                                  <span class="date">\${item.date}</span>
-                                  <a href="\${item.url}">\${item.title}</a>
-                                  \${item.image ? \`<br><img src="\${item.image}" style="max-width:100px;">\` : ""}
-                                  \${item.video ? \`<br><iframe width="200" height="113" src="https://www.youtube.com/embed/\${item.video.split("v=")[1]}" frameborder="0" allowfullscreen></iframe>\` : ""}
-                              </div>
-                          \`;
-                      });
-                      newSectionContent += "</div>";
-
-                      // Replace old section with new content
-                      htmlContent = htmlContent.replace(sectionRegex, newSectionContent);
-                      fs.writeFileSync(htmlPath, htmlContent);
-                      console.log(\`✅ Successfully updated \${contentType} in index.html\`);
-                  } else {
-                      console.log(\`⚠️ Could not find \${contentType}-section in index.html\`);
-                  }
-              } else {
-                  console.log("❌ index.html not found! Skipping update.");
-              }
-
           } catch (error) {
               console.error("❌ Error processing issue:", error);
               process.exit(1);
@@ -136,6 +100,90 @@ jobs:
           EOF
 
           node process-issue.js
+
+      - name: Create or update index.html
+        run: |
+          if [ ! -f index.html ]; then
+            cat > index.html <<EOF
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ART ARCHIVE</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <h1>ART ARCHIVE</h1>
+    <div class="subtitle">personal collection of works / updated irregularly</div>
+
+    <h2>VIDEOS</h2>
+    <div id="videos-section">
+        <div class="loading">Loading video entries...</div>
+    </div>
+
+    <h2>ART</h2>
+    <div id="art-section">
+        <div class="loading">Loading art entries...</div>
+    </div>
+
+    <h2>PHOTOS</h2>
+    <div id="photos-section">
+        <div class="loading">Loading photo entries...</div>
+    </div>
+
+    <h2>JOURNAL</h2>
+    <div id="journal-section">
+        <div class="loading">Loading journal entries...</div>
+    </div>
+
+    <h2>MY CAT</h2>
+    <div id="cat-section">
+        <div class="loading">Loading cat content...</div>
+    </div>
+
+    <div class="footer">
+        last updated: <span id="last-updated-date">15.05.2024</span> | no images loaded = faster browsing
+        <br>
+        <a href="mailto:artist@example.com">contact</a> | 
+        <a href="archive.html">complete archive</a> | 
+        <a href="about.html">about</a>
+    </div>
+
+    <script>
+        function loadContent(contentType, elementId, limit = 5) {
+            fetch(\`./data/\${contentType}.json?v=\${new Date().getTime()}\`)
+                .then(response => response.json())
+                .then(data => {
+                    const contentSection = document.getElementById(elementId);
+                    contentSection.innerHTML = '';
+
+                    if (data.items && data.items.length > 0) {
+                        data.items.slice(0, limit).forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'item';
+                            itemDiv.innerHTML = \`
+                                <span class="date">\${item.date}</span>
+                                <a href="\${item.url}">\${item.title}</a>
+                            \`;
+                            contentSection.appendChild(itemDiv);
+                        });
+                    } else {
+                        contentSection.innerHTML = '<div class="loading">No entries yet</div>';
+                    }
+                })
+                .catch(error => console.error("Error loading content:", error));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            ['art', 'photos', 'journal', 'cat', 'videos'].forEach(contentType => {
+                loadContent(contentType, \`\${contentType}-section\`);
+            });
+        });
+    </script>
+
+</body>
+</html>
+EOF
+          fi
 
       - name: Commit and Push Changes
         run: |
