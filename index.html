@@ -1,0 +1,47 @@
+<h2>ART</h2>
+<div id="art-section">
+    <div class="loading">Loading...</div>
+</div>
+
+<script>
+    // Load art content
+    fetch('/data/art.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('No art content found');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const artSection = document.getElementById('art-section');
+            artSection.innerHTML = ''; // Clear loading message
+            
+            // Display the most recent items (limit to 5)
+            if (data.items && data.items.length > 0) {
+                data.items.slice(0, 5).forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item';
+                    
+                    itemDiv.innerHTML = `
+                        <span class="date">${item.date}</span>
+                        <a href="${item.url}">${item.title}</a>
+                        ${item.description ? `<span class="description">${item.description}</span>` : ''}
+                    `;
+                    artSection.appendChild(itemDiv);
+                });
+                
+                // Add "see all" link
+                const seeAllDiv = document.createElement('div');
+                seeAllDiv.style.textAlign = 'right';
+                seeAllDiv.style.marginTop = '5px';
+                seeAllDiv.innerHTML = `<a href="art.html">see all art (${data.items.length}) →</a>`;
+                artSection.appendChild(seeAllDiv);
+            } else {
+                artSection.innerHTML = '<p>No art entries yet.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading art content:', error);
+            document.getElementById('art-section').innerHTML = '<p>No art entries yet.</p>';
+        });
+</script>
