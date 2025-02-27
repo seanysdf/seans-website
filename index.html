@@ -1,47 +1,58 @@
 <h2>ART</h2>
 <div id="art-section">
-    <div class="loading">Loading...</div>
+    <!-- Content will be loaded here -->
 </div>
 
 <script>
-    // Load art content
-    fetch('./data/art.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('No art content found');
-            }
-            return response.json();
-        })
-        .then(data => {
-            const artSection = document.getElementById('art-section');
-            artSection.innerHTML = ''; // Clear loading message
-            
-            // Display the most recent items (limit to 5)
-            if (data.items && data.items.length > 0) {
-                data.items.slice(0, 5).forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'item';
-                    
-                    itemDiv.innerHTML = `
-                        <span class="date">${item.date}</span>
-                        <a href="${item.url}">${item.title}</a>
-                        ${item.description ? `<span class="description">${item.description}</span>` : ''}
-                    `;
-                    artSection.appendChild(itemDiv);
-                });
+    // Function to load content from JSON file
+    function loadContent(contentType, elementId) {
+        fetch(`./data/${contentType}.json`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`No ${contentType} content found`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const contentSection = document.getElementById(elementId);
+                contentSection.innerHTML = ''; // Clear any existing content
                 
-                // Add "see all" link
-                const seeAllDiv = document.createElement('div');
-                seeAllDiv.style.textAlign = 'right';
-                seeAllDiv.style.marginTop = '5px';
-                seeAllDiv.innerHTML = `<a href="art.html">see all art (${data.items.length}) →</a>`;
-                artSection.appendChild(seeAllDiv);
-            } else {
-                artSection.innerHTML = '<p>No art entries yet.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading art content:', error);
-            document.getElementById('art-section').innerHTML = '<p>No art entries yet.</p>';
-        });
+                // Display the most recent items (limit to 5)
+                if (data.items && data.items.length > 0) {
+                    data.items.slice(0, 5).forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'item';
+                        
+                        itemDiv.innerHTML = `
+                            <span class="date">${item.date}</span>
+                            <a href="${item.url}">${item.title}</a>
+                            ${item.description ? `<span class="description">${item.description}</span>` : ''}
+                        `;
+                        contentSection.appendChild(itemDiv);
+                    });
+                    
+                    // Add "see all" link
+                    const seeAllDiv = document.createElement('div');
+                    seeAllDiv.style.textAlign = 'right';
+                    seeAllDiv.style.marginTop = '5px';
+                    seeAllDiv.innerHTML = `<a href="${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
+                    contentSection.appendChild(seeAllDiv);
+                } else {
+                    contentSection.innerHTML = `<p>No ${contentType} entries yet.</p>`;
+                }
+            })
+            .catch(error => {
+                console.error(`Error loading ${contentType} content:`, error);
+                document.getElementById(elementId).innerHTML = `<p>No ${contentType} entries yet.</p>`;
+            });
+    }
+
+    // Load all content types
+    document.addEventListener('DOMContentLoaded', function() {
+        loadContent('art', 'art-section');
+        // Uncomment these when you have content for these sections
+        // loadContent('photos', 'photos-section');
+        // loadContent('journal', 'journal-section');
+        // loadContent('cat', 'cat-section');
+    });
 </script>
