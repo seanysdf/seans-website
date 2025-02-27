@@ -4,32 +4,131 @@ on:
   issues:
     types: [opened, edited]
 
+permissions:
+  contents: write
+  issues: read
+
 jobs:
   process-content:
-    if: contains(github.event.issue.labels.*.name, 'content')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Debug Issue Info
+        run: |
+          echo "Issue Title: ${{ github.event.issue.title }}"
+          echo "Issue Number: ${{ github.event.issue.number }}"
+          echo "Issue Labels: ${{ toJSON(github.event.issue.labels) }}"
+      
+      - name: Checkout repository
+        uses: actions/checkout@v3
       
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: '16'
       
-      - name: Create data directory if it doesn't exist
-        run: mkdir -p data
-      
-      - name: Process Issue Content
+      - name: Create directories
         run: |
-          # Create issue data file
-          echo '${{ toJSON(github.event.issue) }}' > issue_data.json
+          mkdir -p data
+          mkdir -p art
+          mkdir -p photos
+          mkdir -p journal
+          mkdir -p cat
+      
+      - name: Create empty JSON files if they don't exist
+        run: |
+          [ -f data/art.json ] || echo '{"items":[]}' > data/art.json
+          [ -f data/photos.json ] || echo '{"items":[]}' > data/photos.json
+          [ -f data/journal.json ] || echo '{"items":[]}' > data/journal.json
+          [ -f data/cat.json ] || echo '{"items":[]}' > data/cat.json
+      
+      - name: Create test content
+        run: |
+          echo '{
+            "items": [
+              {
+                "id": "test-entry",
+                "title": "Test Entry",
+                "date": "01.01.2024",
+                "description": "This is a test entry",
+                "content": "Content for test entry",
+                "image": null,
+                "url": "art/test-entry.html"
+              }
+            ]
+          }' > data/art.json
           
-          # Run the processing script
-          node .github/scripts/process-content.js
-        
+          mkdir -p art
+          echo '<!DOCTYPE html>
+          <html>
+          <head>
+              <title>Test Entry | ART ARCHIVE</title>
+              <style>
+                  body {
+                      background-color: #f8f8f8;
+                      font-family: "Lucida Console", Monaco, monospace;
+                      margin: 0;
+                      padding: 20px;
+                      color: #222222;
+                      max-width: 800px;
+                      margin: 0 auto;
+                  }
+                  
+                  h1 {
+                      font-size: 20px;
+                      margin-bottom: 5px;
+                      text-transform: uppercase;
+                  }
+                  
+                  .date {
+                      color: #666;
+                      font-size: 12px;
+                      margin-bottom: 20px;
+                  }
+                  
+                  .description {
+                      color: #444;
+                      font-style: italic;
+                      margin-bottom: 20px;
+                  }
+                  
+                  .content {
+                      line-height: 1.6;
+                  }
+                  
+                  .footer {
+                      margin-top: 30px;
+                      font-size: 11px;
+                      color: #666;
+                      border-top: 1px solid #ccc;
+                      padding-top: 10px;
+                  }
+                  
+                  a {
+                      color: #000;
+                      text-decoration: none;
+                  }
+                  
+                  a:hover {
+                      text-decoration: underline;
+                  }
+              </style>
+          </head>
+          <body>
+              <h1>Test Entry</h1>
+              <div class="date">01.01.2024</div>
+              <div class="description">This is a test entry</div>
+              <div class="content">
+                  Content for test entry
+              </div>
+              <div class="footer">
+                  <a href="/">← back to archive</a>
+              </div>
+          </body>
+          </html>' > art/test-entry.html
+      
       - name: Commit changes
-        uses: EndBug/add-and-commit@v7
+        uses: EndBug/add-and-commit@v9
         with:
-          message: 'Add new content from issue #${{ github.event.issue.number }}'
-          add: 'data/*.json'
+          message: 'Add test content'
+          add: '.'
           default_author: github_actions
