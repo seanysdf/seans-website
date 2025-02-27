@@ -1,58 +1,148 @@
-<h2>ART</h2>
-<div id="art-section">
-    <!-- Content will be loaded here -->
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Art Archive</title>
+    <style>
+        body {
+            background-color: #f8f8f8;
+            font-family: "Lucida Console", Monaco, monospace;
+            margin: 0;
+            padding: 20px;
+            color: #222222;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .item {
+            margin-bottom: 10px;
+        }
+        
+        .date {
+            color: #666;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .description {
+            color: #444;
+            font-style: italic;
+            display: block;
+            margin-top: 3px;
+            font-size: 12px;
+        }
+        
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Art Archive</h1>
+    
+    <div class="section">
+        <h2>Art</h2>
+        <div id="art-section">
+            <p>Loading art entries...</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Photos</h2>
+        <div id="photos-section">
+            <p>Loading photo entries...</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Journal</h2>
+        <div id="journal-section">
+            <p>Loading journal entries...</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>My Cat</h2>
+        <div id="cat-section">
+            <p>Loading cat entries...</p>
+        </div>
+    </div>
 
-<script>
-    // Function to load content from JSON file
-    function loadContent(contentType, elementId) {
-        fetch(`./data/${contentType}.json`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`No ${contentType} content found`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const contentSection = document.getElementById(elementId);
-                contentSection.innerHTML = ''; // Clear any existing content
-                
-                // Display the most recent items (limit to 5)
-                if (data.items && data.items.length > 0) {
-                    data.items.slice(0, 5).forEach(item => {
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'item';
-                        
-                        itemDiv.innerHTML = `
-                            <span class="date">${item.date}</span>
-                            <a href="${item.url}">${item.title}</a>
-                            ${item.description ? `<span class="description">${item.description}</span>` : ''}
-                        `;
-                        contentSection.appendChild(itemDiv);
-                    });
+    <script>
+        // Function to load content from JSON file
+        function loadContent(contentType, elementId, limit = 5) {
+            fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`No ${contentType} content found`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const contentSection = document.getElementById(elementId);
+                    contentSection.innerHTML = ''; // Clear loading message
                     
-                    // Add "see all" link
-                    const seeAllDiv = document.createElement('div');
-                    seeAllDiv.style.textAlign = 'right';
-                    seeAllDiv.style.marginTop = '5px';
-                    seeAllDiv.innerHTML = `<a href="${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
-                    contentSection.appendChild(seeAllDiv);
-                } else {
-                    contentSection.innerHTML = `<p>No ${contentType} entries yet.</p>`;
-                }
-            })
-            .catch(error => {
-                console.error(`Error loading ${contentType} content:`, error);
-                document.getElementById(elementId).innerHTML = `<p>No ${contentType} entries yet.</p>`;
-            });
-    }
+                    // Display the most recent items
+                    if (data.items && data.items.length > 0) {
+                        data.items.slice(0, limit).forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'item';
+                            
+                            itemDiv.innerHTML = `
+                                <span class="date">${item.date}</span>
+                                <a href="${item.url}">${item.title}</a>
+                                ${item.description ? `<span class="description">${item.description}</span>` : ''}
+                                ${item.image ? `<div style="margin-top:5px;"><img src="${item.image}" alt="${item.title}" style="max-width:150px;"></div>` : ''}
+                            `;
+                            contentSection.appendChild(itemDiv);
+                        });
+                        
+                        // Add "see all" link if there are more than the limit
+                        if (data.items.length > limit) {
+                            const seeAllDiv = document.createElement('div');
+                            seeAllDiv.style.textAlign = 'right';
+                            seeAllDiv.style.marginTop = '5px';
+                            seeAllDiv.innerHTML = `<a href="${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
+                            contentSection.appendChild(seeAllDiv);
+                        }
+                    } else {
+                        contentSection.innerHTML = `<p>No ${contentType} entries yet.</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error loading ${contentType} content:`, error);
+                    document.getElementById(elementId).innerHTML = `<p>No ${contentType} entries yet.</p>`;
+                });
+        }
 
-    // Load all content types
-    document.addEventListener('DOMContentLoaded', function() {
-        loadContent('art', 'art-section');
-        // Uncomment these when you have content for these sections
-        // loadContent('photos', 'photos-section');
-        // loadContent('journal', 'journal-section');
-        // loadContent('cat', 'cat-section');
-    });
-</script>
+        // Load all content types when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContent('art', 'art-section');
+            loadContent('photos', 'photos-section');
+            loadContent('journal', 'journal-section');
+            loadContent('cat', 'cat-section');
+        });
+    </script>
+</body>
+</html>
