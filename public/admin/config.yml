@@ -1,0 +1,83 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: static/img
+public_folder: /img
+
+collections:
+  - name: "art"
+    label: "Art"
+    folder: "src/pages/art"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Template Key", name: "templateKey", widget: "hidden", default: "art-post"}
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Publish Date", name: "date", widget: "datetime"}
+      - {label: "Description", name: "description", widget: "text"}
+      - {label: "Featured Image", name: "featuredimage", widget: "image", required: false}
+      - {label: "Body", name: "body", widget: "markdown"}
+      
+  - name: "photos"
+    label: "Photos"
+    folder: "src/pages/photos"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Template Key", name: "templateKey", widget: "hidden", default: "photo-post"}
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Publish Date", name: "date", widget: "datetime"}
+      - {label: "Description", name: "description", widget: "text"}
+      - {label: "Featured Image", name: "featuredimage", widget: "image"}
+      - {label: "Body", name: "body", widget: "markdown"}
+      
+  - name: "journal"
+    label: "Journal"
+    folder: "src/pages/journal"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Template Key", name: "templateKey", widget: "hidden", default: "journal-post"}
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Publish Date", name: "date", widget: "datetime"}
+      - {label: "Body", name: "body", widget: "markdown"}
+      
+  - name: "cat"
+    label: "Cat"
+    folder: "src/pages/cat"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Template Key", name: "templateKey", widget: "hidden", default: "cat-post"}
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Publish Date", name: "date", widget: "datetime"}
+      - {label: "Description", name: "description", widget: "text"}
+      - {label: "Featured Image", name: "featuredimage", widget: "image"}
+      - {label: "Body", name: "body", widget: "markdown"}
+      
+  - name: "pages"
+    label: "Pages"
+    files:
+      - file: "src/pages/index.md"
+        label: "Landing Page"
+        name: "index"
+        fields:
+          - {label: "Template Key", name: "templateKey", widget: "hidden", default: "index-page"}
+          - {label: "Random Content", name: "randomContent", widget: "text"}
+      
+      - file: "src/pages/about/index.md"
+        label: "About"
+        name: "about"
+        fields:
+          - {label: "Template Key", name: "templateKey", widget: "hidden", default: "about-page"}
+          - {label: "Title", name: "title", widget: "string"}
+          - {label: "Body", name: "body", widget: "markdown"}
+      
+      - file: "src/pages/guestbook/index.md"
+        label: "Guestbook"
+        name: "guestbook"
+        fields:
+          - {label: "Template Key", name: "templateKey", widget: "hidden", default: "guestbook-page"}
+          - {label: "Title", name: "title", widget: "string"}
+          - {label: "Body", name: "body", widget: "markdown"}
