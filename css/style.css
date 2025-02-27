@@ -1,0 +1,108 @@
+body {
+    background-color: #f8f8f8;
+    font-family: "Lucida Console", Monaco, monospace;
+    margin: 0;
+    padding: 20px;
+    color: #222222;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 20px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+h2 {
+    font-size: 16px;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+    text-transform: uppercase;
+}
+
+a {
+    color: #000;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #555;
+}
+
+.date {
+    color: #666;
+    font-size: 12px;
+    display: inline-block;
+    width: 90px;
+}
+
+.description {
+    color: #444;
+    font-size: 12px;
+    margin-left: 10px;
+    font-style: italic;
+}
+
+.item {
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 11px;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+}
+
+.random {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    font-family: "Courier New", monospace;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 20px;
+}
+
+.cat-section {
+    margin: 20px 0;
+}
+
+.cat-item {
+    margin-bottom: 8px;
+}
+
+.view-all {
+    text-align: right;
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.loading {
+    color: #888;
+    font-style: italic;
+    font-size: 12px;
+    margin-left: 90px;
+}
+
+.content {
+    line-height: 1.6;
+    margin-top: 20px;
+}
+
+.image {
+    margin: 20px 0;
+}
