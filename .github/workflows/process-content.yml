@@ -1,0 +1,35 @@
+name: Process New Content
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  process-content:
+    if: contains(github.event.issue.labels.*.name, 'content')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      
+      - name: Create data directory if it doesn't exist
+        run: mkdir -p data
+      
+      - name: Process Issue Content
+        run: |
+          # Create issue data file
+          echo '${{ toJSON(github.event.issue) }}' > issue_data.json
+          
+          # Run the processing script
+          node .github/scripts/process-content.js
+        
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v7
+        with:
+          message: 'Add new content from issue #${{ github.event.issue.number }}'
+          add: 'data/*.json'
+          default_author: github_actions
