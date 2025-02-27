@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Art Archive</title>
     <style>
+        /* Base Styles */
         body {
             background-color: #f8f8f8;
             font-family: "Lucida Console", Monaco, monospace;
@@ -11,24 +14,31 @@
             color: #222222;
             max-width: 800px;
             margin: 0 auto;
+            line-height: 1.5;
         }
         
+        /* Typography */
         h1 {
             font-size: 24px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
         }
         
         h2 {
             font-size: 18px;
-            margin-top: 30px;
-            margin-bottom: 10px;
+            margin-top: 40px;
+            margin-bottom: 15px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
+        /* Content Items */
         .item {
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #eee;
         }
         
@@ -42,35 +52,89 @@
             color: #444;
             font-style: italic;
             display: block;
-            margin-top: 3px;
+            margin-top: 5px;
             font-size: 12px;
         }
         
+        /* Links */
         a {
             color: #000;
             text-decoration: none;
+            transition: color 0.2s ease;
         }
         
         a:hover {
-            text-decoration: underline;
+            color: #555;
         }
         
-        .thumbnail {
-            margin-top: 10px;
-            max-width: 200px;
-            max-height: 150px;
-            object-fit: contain;
-            background-color: #f0f0f0;
-            padding: 5px;
-            border: 1px solid #ddd;
-        }
-        
-        .thumbnail-container {
-            margin-top: 10px;
-        }
-        
+        /* Section Containers */
         .section {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+        }
+        
+        /* View All Links */
+        .view-all {
+            text-align: right;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .view-all a {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .view-all a:hover {
+            background-color: #e0e0e0;
+            text-decoration: none;
+        }
+        
+        /* Image Preview Link */
+        .image-preview-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #666;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .image-preview-link:hover {
+            background-color: #e0e0e0;
+            text-decoration: none;
+            color: #444;
+        }
+        
+        /* Loading State */
+        .loading {
+            color: #888;
+            font-style: italic;
+            font-size: 14px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            color: #888;
+            font-style: italic;
+            font-size: 14px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
         }
     </style>
 </head>
@@ -80,67 +144,36 @@
     <div class="section">
         <h2>Art</h2>
         <div id="art-section">
-            <p>Loading art entries...</p>
+            <p class="loading">Loading art entries...</p>
         </div>
     </div>
     
     <div class="section">
         <h2>Photos</h2>
         <div id="photos-section">
-            <p>Loading photo entries...</p>
+            <p class="loading">Loading photo entries...</p>
         </div>
     </div>
     
     <div class="section">
         <h2>Journal</h2>
         <div id="journal-section">
-            <p>Loading journal entries...</p>
+            <p class="loading">Loading journal entries...</p>
         </div>
     </div>
     
     <div class="section">
         <h2>My Cat</h2>
         <div id="cat-section">
-            <p>Loading cat entries...</p>
+            <p class="loading">Loading cat entries...</p>
         </div>
+    </div>
+    
+    <div class="footer">
+        Art Archive &copy; 2024
     </div>
 
     <script>
-        // Function to safely load an image with fallback
-        function createSafeImage(imageUrl, title, itemUrl) {
-            const imgContainer = document.createElement('div');
-            imgContainer.className = 'thumbnail-container';
-            
-            const link = document.createElement('a');
-            link.href = itemUrl;
-            
-            const img = document.createElement('img');
-            img.className = 'thumbnail';
-            img.alt = title;
-            
-            // Set up error handling before setting src
-            img.onerror = function() {
-                console.error(`Failed to load image: ${imageUrl}`);
-                // Try with a proxy as fallback (if it's a GitHub attachment)
-                if (imageUrl.includes('github.com/user-attachments')) {
-                    console.log("Trying to load GitHub attachment via proxy...");
-                    // Use a simple CORS proxy or a placeholder
-                    img.src = 'https://placehold.co/200x150?text=Image+Available+in+Detail+View';
-                    img.alt = 'Image available in detail view';
-                } else {
-                    // Use a placeholder for non-GitHub images
-                    img.src = 'https://placehold.co/200x150?text=Image+Error';
-                }
-            };
-            
-            // Set the source last (after setting up error handler)
-            img.src = imageUrl;
-            
-            link.appendChild(img);
-            imgContainer.appendChild(link);
-            return imgContainer;
-        }
-
         // Function to load content from JSON file
         function loadContent(contentType, elementId, limit = 5) {
             // Add cache-busting parameter
@@ -152,7 +185,6 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log(`Loaded ${contentType} data:`, data); // Debug output
                     const contentSection = document.getElementById(elementId);
                     contentSection.innerHTML = ''; // Clear loading message
                     
@@ -181,11 +213,13 @@
                                 itemDiv.appendChild(descSpan);
                             }
                             
-                            // Add image if available
+                            // Add image preview link if there's an image
                             if (item.image) {
-                                console.log(`Processing image for ${item.title}: ${item.image}`);
-                                const imgContainer = createSafeImage(item.image, item.title, item.url);
-                                itemDiv.appendChild(imgContainer);
+                                const previewLink = document.createElement('a');
+                                previewLink.href = item.url;
+                                previewLink.className = 'image-preview-link';
+                                previewLink.textContent = 'View with image →';
+                                itemDiv.appendChild(previewLink);
                             }
                             
                             contentSection.appendChild(itemDiv);
@@ -194,18 +228,17 @@
                         // Add "see all" link if there are more than the limit
                         if (data.items.length > limit) {
                             const seeAllDiv = document.createElement('div');
-                            seeAllDiv.style.textAlign = 'right';
-                            seeAllDiv.style.marginTop = '5px';
+                            seeAllDiv.className = 'view-all';
                             seeAllDiv.innerHTML = `<a href="${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
                             contentSection.appendChild(seeAllDiv);
                         }
                     } else {
-                        contentSection.innerHTML = `<p>No ${contentType} entries yet.</p>`;
+                        contentSection.innerHTML = `<p class="empty-state">No ${contentType} entries yet.</p>`;
                     }
                 })
                 .catch(error => {
                     console.error(`Error loading ${contentType} content:`, error);
-                    document.getElementById(elementId).innerHTML = `<p>No ${contentType} entries yet.</p>`;
+                    document.getElementById(elementId).innerHTML = `<p class="empty-state">No ${contentType} entries yet.</p>`;
                 });
         }
 
@@ -215,16 +248,6 @@
             loadContent('photos', 'photos-section');
             loadContent('journal', 'journal-section');
             loadContent('cat', 'cat-section');
-            
-            // Debug information
-            console.log("Page loaded. Checking for images in 2 seconds...");
-            setTimeout(function() {
-                const images = document.querySelectorAll('img');
-                console.log(`Found ${images.length} images on the page`);
-                images.forEach((img, i) => {
-                    console.log(`Image ${i+1} src: ${img.src}`);
-                });
-            }, 2000);
         });
     </script>
 </body>
