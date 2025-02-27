@@ -12,12 +12,6 @@ jobs:
   process-content:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug Issue Info
-        run: |
-          echo "Issue Title: ${{ github.event.issue.title }}"
-          echo "Issue Number: ${{ github.event.issue.number }}"
-          echo "Issue Labels: ${{ toJSON(github.event.issue.labels) }}"
-      
       - name: Checkout repository
         uses: actions/checkout@v3
       
@@ -41,94 +35,17 @@ jobs:
           [ -f data/journal.json ] || echo '{"items":[]}' > data/journal.json
           [ -f data/cat.json ] || echo '{"items":[]}' > data/cat.json
       
-      - name: Create test content
+      - name: Process Issue Content
         run: |
-          echo '{
-            "items": [
-              {
-                "id": "test-entry",
-                "title": "Test Entry",
-                "date": "01.01.2024",
-                "description": "This is a test entry",
-                "content": "Content for test entry",
-                "image": null,
-                "url": "art/test-entry.html"
-              }
-            ]
-          }' > data/art.json
+          # Create issue data file
+          echo '${{ toJSON(github.event.issue) }}' > issue_data.json
           
-          mkdir -p art
-          echo '<!DOCTYPE html>
-          <html>
-          <head>
-              <title>Test Entry | ART ARCHIVE</title>
-              <style>
-                  body {
-                      background-color: #f8f8f8;
-                      font-family: "Lucida Console", Monaco, monospace;
-                      margin: 0;
-                      padding: 20px;
-                      color: #222222;
-                      max-width: 800px;
-                      margin: 0 auto;
-                  }
-                  
-                  h1 {
-                      font-size: 20px;
-                      margin-bottom: 5px;
-                      text-transform: uppercase;
-                  }
-                  
-                  .date {
-                      color: #666;
-                      font-size: 12px;
-                      margin-bottom: 20px;
-                  }
-                  
-                  .description {
-                      color: #444;
-                      font-style: italic;
-                      margin-bottom: 20px;
-                  }
-                  
-                  .content {
-                      line-height: 1.6;
-                  }
-                  
-                  .footer {
-                      margin-top: 30px;
-                      font-size: 11px;
-                      color: #666;
-                      border-top: 1px solid #ccc;
-                      padding-top: 10px;
-                  }
-                  
-                  a {
-                      color: #000;
-                      text-decoration: none;
-                  }
-                  
-                  a:hover {
-                      text-decoration: underline;
-                  }
-              </style>
-          </head>
-          <body>
-              <h1>Test Entry</h1>
-              <div class="date">01.01.2024</div>
-              <div class="description">This is a test entry</div>
-              <div class="content">
-                  Content for test entry
-              </div>
-              <div class="footer">
-                  <a href="/">← back to archive</a>
-              </div>
-          </body>
-          </html>' > art/test-entry.html
+          # Run the processing script
+          node .github/scripts/process-content.js
       
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'Add test content'
+          message: 'Add content from issue #${{ github.event.issue.number }}'
           add: '.'
           default_author: github_actions
