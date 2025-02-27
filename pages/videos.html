@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ART ARCHIVE | All Videos</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <h1>ALL VIDEOS</h1>
+    <div class="subtitle">moving image works and experiments</div>
+    
+    <div id="videos-list">
+        <div class="loading">Loading video entries...</div>
+    </div>
+    
+    <div class="footer">
+        <a href="/">← back to archive</a>
+    </div>
+
+    <script>
+        // Load videos content
+        fetch('../data/videos.json?v=' + new Date().getTime())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('No videos content found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const videosList = document.getElementById('videos-list');
+                videosList.innerHTML = ''; // Clear loading message
+                
+                // Display all items
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'item';
+                        
+                        // Create date span
+                        const dateSpan = document.createElement('span');
+                        dateSpan.className = 'date';
+                        dateSpan.textContent = item.date;
+                        itemDiv.appendChild(dateSpan);
+                        
+                        // Create title link
+                        const titleLink = document.createElement('a');
+                        titleLink.href = '../' + item.url;
+                        titleLink.textContent = item.title;
+                        itemDiv.appendChild(titleLink);
+                        
+                        // Add description if available
+                        if (item.description) {
+                            const descSpan = document.createElement('span');
+                            descSpan.className = 'description';
+                            descSpan.textContent = item.description;
+                            itemDiv.appendChild(descSpan);
+                        }
+                        
+                        videosList.appendChild(itemDiv);
+                    });
+                } else {
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = 'item';
+                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                    videosList.appendChild(emptyItem);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading videos content:', error);
+                const videosList = document.getElementById('videos-list');
+                const emptyItem = document.createElement('div');
+                emptyItem.className = 'item';
+                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                videosList.innerHTML = '';
+                videosList.appendChild(emptyItem);
+            });
+    </script>
+</body>
+</html>
