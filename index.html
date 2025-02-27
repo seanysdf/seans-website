@@ -50,22 +50,130 @@
             margin-left: 90px;
         }
 
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        a:visited {
+            color: #555;
+        }
+
+        .date {
+            color: #666;
+            font-size: 12px;
+            display: inline-block;
+            width: 90px;
+        }
+
+        .description {
+            color: #444;
+            font-size: 12px;
+            margin-left: 10px;
+            font-style: italic;
+        }
+
+        .item {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+
+        .random {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            font-family: "Courier New", monospace;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .view-all {
+            text-align: right;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
     </style>
 </head>
 <body>
     <h1>ART ARCHIVE</h1>
     <div class="subtitle">personal collection of works / updated irregularly</div>
-    
+
+    <h2>ART</h2>
+    <div id="art-section">
+        <div class="loading">Loading art entries...</div>
+    </div>
+
+    <h2>PHOTOS</h2>
+    <div id="photos-section">
+        <div class="loading">Loading photo entries...</div>
+    </div>
+
+    <h2>JOURNAL</h2>
+    <div id="journal-section">
+        <div class="loading">Loading journal entries...</div>
+    </div>
+
+    <h2>MY CAT</h2>
+    <div id="cat-section">
+        <div class="loading">Loading cat content...</div>
+    </div>
+
     <h2>VIDEOS</h2>
     <div id="videos-section" class="video-container">
         <div class="loading">Loading video entries...</div>
     </div>
 
     <div style="text-align: right; margin-top: 5px;">
-        <a id="videos-link" href="pages/videos.html">see all videos (0) →</a>
+        <a id="videos-link" href="videos.html">see all videos (0) →</a>
+    </div>
+
+    <h2>SOMETHING RANDOM</h2>
+    <div class="random">
+        found a roll of film from 2019 under my bed. getting it developed tomorrow.<br>
+        <br>
+        current studio playlist:<br>
+        - boards of canada - music has the right to children<br>
+        - autechre - amber<br>
+        - aphex twin - selected ambient works 85-92<br>
+        - burial - untrue<br>
+        <br>
+        dream from last night: standing in an empty museum where all the paintings were actually windows<br>
+        <br>
+        next experiment: trying to create a camera obscura in my bathroom
+    </div>
+
+    <div class="footer">
+        last updated: <span id="last-updated-date">15.05.2024</span> | no images loaded = faster browsing<br>
+        <a href="mailto:artist@example.com">contact</a> | 
+        <a href="archive.html">complete archive</a> | 
+        <a href="about.html">about</a>
     </div>
 
     <script>
+        function extractYouTubeID(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            return match ? match[1] : null;
+        }
+
         function loadContent(contentType, elementId, limit = 5) {
             fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
                 .then(response => {
@@ -79,14 +187,19 @@
                     contentSection.innerHTML = '';
 
                     if (data.items && data.items.length > 0) {
+                        let videoCount = 0;
+
                         data.items.slice(0, limit).forEach(item => {
                             if (contentType === 'videos') {
-                                const videoId = item.url.split("v=")[1];
-                                const videoFrame = document.createElement('iframe');
-                                videoFrame.src = `https://www.youtube.com/embed/${videoId}`;
-                                videoFrame.frameBorder = "0";
-                                videoFrame.allowFullscreen = true;
-                                contentSection.appendChild(videoFrame);
+                                const videoId = extractYouTubeID(item.video);
+                                if (videoId) {
+                                    const videoFrame = document.createElement('iframe');
+                                    videoFrame.src = `https://www.youtube.com/embed/${videoId}`;
+                                    videoFrame.frameBorder = "0";
+                                    videoFrame.allowFullscreen = true;
+                                    contentSection.appendChild(videoFrame);
+                                    videoCount++;
+                                }
                             } else {
                                 const itemDiv = document.createElement('div');
                                 itemDiv.innerHTML = `<span class="date">${item.date}</span> <a href="${item.url}">${item.title}</a>`;
@@ -94,9 +207,8 @@
                             }
                         });
 
-                        // Update "see all videos" count
                         if (contentType === 'videos') {
-                            document.getElementById('videos-link').innerText = `see all videos (${data.items.length}) →`;
+                            document.getElementById('videos-link').innerText = `see all videos (${videoCount}) →`;
                         }
                     } else {
                         contentSection.innerHTML = '<span class="loading">No entries yet</span>';
@@ -109,7 +221,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            loadContent('art', 'art-section');
+            loadContent('photos', 'photos-section');
+            loadContent('journal', 'journal-section');
+            loadContent('cat', 'cat-section');
             loadContent('videos', 'videos-section');
+
+            const today = new Date();
+            const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth()+1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+            document.getElementById('last-updated-date').textContent = formattedDate;
         });
     </script>
 </body>
