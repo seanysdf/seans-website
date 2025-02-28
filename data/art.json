@@ -1,6 +1,16 @@
 {
   "items": [
     {
+      "id": "drop-clip",
+      "title": "drop clip",
+      "date": "28.02.2025",
+      "description": null,
+      "content": "",
+      "image": null,
+      "video": null,
+      "url": "content/art/drop-clip.html"
+    },
+    {
       "id": "tobi-test",
       "title": "tobi test",
       "date": "28.02.2025",
