@@ -48,76 +48,75 @@ jobs:
           echo '${{ toJSON(github.event.issue) }}' > issue_data.json
           
           # Create processing script
-          cat > process-issue.js << 'EOF'
-          const fs = require('fs');
-
+          echo 'const fs = require("fs");
+          
           // Read the issue data
-          const issueData = JSON.parse(fs.readFileSync('issue_data.json', 'utf8'));
-
+          const issueData = JSON.parse(fs.readFileSync("issue_data.json", "utf8"));
+          
           // Get basic info
           const title = issueData.title;
           const body = issueData.body;
           const createdAt = issueData.created_at;
           const labels = issueData.labels || [];
-
+          
           // Determine content type from title or labels
-          let contentType = 'art'; // Default to art
-          if (title.toLowerCase().includes('[photo]') || labels.some(l => l.name.toLowerCase() === 'photo')) contentType = 'photos';
-          if (title.toLowerCase().includes('[journal]') || labels.some(l => l.name.toLowerCase() === 'journal')) contentType = 'journal';
-          if (title.toLowerCase().includes('[cat]') || labels.some(l => l.name.toLowerCase() === 'cat')) contentType = 'cat';
-          if (title.toLowerCase().includes('[video]') || labels.some(l => l.name.toLowerCase() === 'video')) contentType = 'videos';
-
+          let contentType = "art"; // Default to art
+          if (title.toLowerCase().includes("[photo]") || labels.some(l => l.name.toLowerCase() === "photo")) contentType = "photos";
+          if (title.toLowerCase().includes("[journal]") || labels.some(l => l.name.toLowerCase() === "journal")) contentType = "journal";
+          if (title.toLowerCase().includes("[cat]") || labels.some(l => l.name.toLowerCase() === "cat")) contentType = "cat";
+          if (title.toLowerCase().includes("[video]") || labels.some(l => l.name.toLowerCase() === "video")) contentType = "videos";
+          
           // Format date
           const date = new Date(createdAt);
-          const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth()+1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-
+          const formattedDate = `${date.getDate().toString().padStart(2, "0")}.${(date.getMonth()+1).toString().padStart(2, "0")}.${date.getFullYear()}`;
+          
           // Create ID from title
-          const cleanTitle = title.replace(/\[[^\]]+\]/g, '').trim();
-          const id = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-
+          const cleanTitle = title.replace(/\[[^\]]+\]/g, "").trim();
+          const id = cleanTitle.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+          
           // Extract fields from body
           function extractField(body, fieldName) {
-            const regex = new RegExp(`### ${fieldName}\\s+([^#]*?)(?=###|$)`, 's');
+            const regex = new RegExp(`### ${fieldName}\\s+([^#]*?)(?=###|$)`, "s");
             const match = body.match(regex);
-            return match ? match[1].trim() : '';
+            return match ? match[1].trim() : "";
           }
-
-          const description = extractField(body, 'Description');
-          const content = extractField(body, 'Content');
-          const image = extractField(body, 'Image URL \\(optional\\)');
-          const videoUrl = extractField(body, 'Video URL \\(optional\\)');
-
+          
+          const description = extractField(body, "Description");
+          const content = extractField(body, "Content");
+          const image = extractField(body, "Image URL \\(optional\\)");
+          const videoUrl = extractField(body, "Video URL \\(optional\\)");
+          
           // Process video URL for embedding
           function processVideoUrl(url) {
-            if (!url) return '';
+            if (!url) return "";
             
             // Handle local repository paths
-            if (url.startsWith('/')) {
+            if (url.startsWith("/")) {
               return `<video controls width="100%"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
             }
             
             // YouTube
-            if (url.includes('youtube.com/watch?v=')) {
-              const videoId = url.split('v=')[1].split('&')[0];
+            if (url.includes("youtube.com/watch?v=")) {
+              const videoId = url.split("v=")[1].split("&")[0];
               return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
             }
             
             // YouTube short URL
-            if (url.includes('youtu.be/')) {
-              const videoId = url.split('youtu.be/')[1].split('?')[0];
+            if (url.includes("youtu.be/")) {
+              const videoId = url.split("youtu.be/")[1].split("?")[0];
               return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
             }
             
             // Vimeo
-            if (url.includes('vimeo.com/')) {
-              const videoId = url.split('vimeo.com/')[1].split('?')[0];
+            if (url.includes("vimeo.com/")) {
+              const videoId = url.split("vimeo.com/")[1].split("?")[0];
               return `<iframe src="https://player.vimeo.com/video/${videoId}" width="100%" height="315" frameborder="0" allowfullscreen></iframe>`;
             }
             
             // Default: assume direct link to video file
             return `<video controls width="100%"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
           }
-
+          
           // Create the new item
           const newItem = {
             id: id,
@@ -129,19 +128,19 @@ jobs:
             video: videoUrl || null,
             url: `content/${contentType}/${id}.html`
           };
-
+          
           // Read existing data
           const dataPath = `data/${contentType}.json`;
           let data = { items: [] };
-
+          
           if (fs.existsSync(dataPath)) {
             try {
-              data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+              data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
             } catch (error) {
               console.log(`Error reading ${dataPath}. Creating new file.`);
             }
           }
-
+          
           // Add new item (or update existing one with same ID)
           const existingIndex = data.items.findIndex(item => item.id === id);
           if (existingIndex >= 0) {
@@ -149,10 +148,10 @@ jobs:
           } else {
             data.items.unshift(newItem); // Add to beginning (newest first)
           }
-
+          
           // Write updated data
           fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-
+          
           // Create HTML file
           const htmlContent = `<!DOCTYPE html>
           <html>
@@ -191,182 +190,120 @@ jobs:
           <body>
               <h1>${cleanTitle}</h1>
               <div class="date">${formattedDate}</div>
-              ${description ? `<div class="description">${description}</div>` : ''}
+              ${description ? `<div class="description">${description}</div>` : ""}
               
-              ${image ? `<div class="image"><img src="${image}" alt="${cleanTitle}" style="max-width:100%;"></div>` : ''}
+              ${image ? `<div class="image"><img src="${image}" alt="${cleanTitle}" style="max-width:100%;"></div>` : ""}
               
-              ${videoUrl ? `<div class="video-container">${processVideoUrl(videoUrl)}</div>` : ''}
+              ${videoUrl ? `<div class="video-container">${processVideoUrl(videoUrl)}</div>` : ""}
               
               <div class="content">
-                  ${content.replace(/\n/g, '<br>')}
+                  ${content.replace(/\n/g, "<br>")}
               </div>
               <div class="footer">
                   <a href="/">← back to archive</a>
               </div>
           </body>
           </html>`;
-
+          
           fs.writeFileSync(`content/${contentType}/${id}.html`, htmlContent);
           console.log(`Created/updated entry: ${cleanTitle} (content/${contentType}/${id}.html)`);
-          EOF
+          ' > process-issue.js
           
           # Run the processing script
           node process-issue.js
       
-      - name: Create or update index.html
+      - name: Download index.html if it doesn't exist
         run: |
           if [ ! -f index.html ]; then
-            cat > index.html << 'EOF'
-            <!DOCTYPE html>
+            curl -o index.html https://raw.githubusercontent.com/yourusername/your-repository/main/.github/templates/index.html || echo "Could not download template"
+          fi
+      
+      - name: Create videos page if it doesn't exist
+        run: |
+          if [ ! -f pages/videos.html ]; then
+            echo '<!DOCTYPE html>
             <html>
             <head>
-                <title>ART ARCHIVE</title>
-                <link rel="stylesheet" href="css/style.css">
+                <title>ART ARCHIVE | All Videos</title>
+                <link rel="stylesheet" href="../css/style.css">
             </head>
             <body>
-                <h1>ART ARCHIVE</h1>
-                <div class="subtitle">personal collection of works / updated irregularly</div>
+                <h1>ALL VIDEOS</h1>
+                <div class="subtitle">moving image works and experiments</div>
                 
-                <h2>ART</h2>
-                <div id="art-section">
-                    <div class="loading">Loading art entries...</div>
-                </div>
-                
-                <h2>PHOTOS</h2>
-                <div id="photos-section">
-                    <div class="loading">Loading photo entries...</div>
-                </div>
-                
-                <h2>VIDEOS</h2>
-                <div id="videos-section">
+                <div id="videos-list">
                     <div class="loading">Loading video entries...</div>
                 </div>
                 
-                <h2>JOURNAL</h2>
-                <div id="journal-section">
-                    <div class="loading">Loading journal entries...</div>
-                </div>
-                
-                <h2>MY CAT</h2>
-                <div id="cat-section" class="cat-section">
-                    <div class="loading">Loading cat content...</div>
-                </div>
-                
-                <h2>SOMETHING RANDOM</h2>
-                
-                <div class="random">
-                found a roll of film from 2019 under my bed. getting it developed tomorrow.<br>
-                <br>
-                current studio playlist:<br>
-                - boards of canada - music has the right to children<br>
-                - autechre - amber<br>
-                - aphex twin - selected ambient works 85-92<br>
-                - burial - untrue<br>
-                <br>
-                dream from last night: standing in an empty museum where all the paintings were actually windows<br>
-                <br>
-                next experiment: trying to create a camera obscura in my bathroom
-                </div>
-                
                 <div class="footer">
-                    last updated: <span id="last-updated-date">15.05.2024</span> | no images loaded = faster browsing<br>
-                    <a href="mailto:artist@example.com">contact</a> | 
-                    <a href="pages/about.html">about</a>
+                    <a href="/">← back to archive</a>
                 </div>
 
                 <script>
-                    // Function to load content from JSON file
-                    function loadContent(contentType, elementId, limit = 5) {
-                        fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`No ${contentType} content found`);
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                const contentSection = document.getElementById(elementId);
-                                contentSection.innerHTML = ''; // Clear loading message
-                                
-                                // Display the most recent items
-                                if (data.items && data.items.length > 0) {
-                                    // Update the last updated date
-                                    if (data.items[0] && data.items[0].date) {
-                                        document.getElementById('last-updated-date').textContent = data.items[0].date;
+                    // Load videos content
+                    fetch("../data/videos.json?v=" + new Date().getTime())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("No videos content found");
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const videosList = document.getElementById("videos-list");
+                            videosList.innerHTML = ""; // Clear loading message
+                            
+                            // Display all items
+                            if (data.items && data.items.length > 0) {
+                                data.items.forEach(item => {
+                                    const itemDiv = document.createElement("div");
+                                    itemDiv.className = "item";
+                                    
+                                    // Create date span
+                                    const dateSpan = document.createElement("span");
+                                    dateSpan.className = "date";
+                                    dateSpan.textContent = item.date;
+                                    itemDiv.appendChild(dateSpan);
+                                    
+                                    // Create title link
+                                    const titleLink = document.createElement("a");
+                                    titleLink.href = "../" + item.url;
+                                    titleLink.textContent = item.title;
+                                    itemDiv.appendChild(titleLink);
+                                    
+                                    // Add description if available
+                                    if (item.description) {
+                                        const descSpan = document.createElement("span");
+                                        descSpan.className = "description";
+                                        descSpan.textContent = item.description;
+                                        itemDiv.appendChild(descSpan);
                                     }
                                     
-                                    data.items.slice(0, limit).forEach(item => {
-                                        const itemDiv = document.createElement('div');
-                                        itemDiv.className = contentType === 'cat' ? 'cat-item' : 'item';
-                                        
-                                        // Create date span
-                                        const dateSpan = document.createElement('span');
-                                        dateSpan.className = 'date';
-                                        dateSpan.textContent = item.date;
-                                        itemDiv.appendChild(dateSpan);
-                                        
-                                        // Create title link
-                                        const titleLink = document.createElement('a');
-                                        titleLink.href = item.url;
-                                        titleLink.textContent = item.title;
-                                        itemDiv.appendChild(titleLink);
-                                        
-                                        // Add description if available
-                                        if (item.description) {
-                                            const descSpan = document.createElement('span');
-                                            descSpan.className = 'description';
-                                            descSpan.textContent = item.description;
-                                            itemDiv.appendChild(descSpan);
-                                        }
-                                        
-                                        contentSection.appendChild(itemDiv);
-                                    });
-                                    
-                                    // Add "see all" link if there are more than the limit
-                                    if (data.items.length > limit) {
-                                        const seeAllDiv = document.createElement('div');
-                                        seeAllDiv.className = 'view-all';
-                                        seeAllDiv.innerHTML = `<a href="pages/${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
-                                        contentSection.appendChild(seeAllDiv);
-                                    }
-                                } else {
-                                    const emptyItem = document.createElement('div');
-                                    emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
-                                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
-                                    contentSection.appendChild(emptyItem);
-                                }
-                            })
-                            .catch(error => {
-                                console.error(`Error loading ${contentType} content:`, error);
-                                const contentSection = document.getElementById(elementId);
-                                const emptyItem = document.createElement('div');
-                                emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
-                                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
-                                contentSection.innerHTML = '';
-                                contentSection.appendChild(emptyItem);
-                            });
-                    }
-
-                    // Load all content types when the page loads
-                    document.addEventListener('DOMContentLoaded', function() {
-                        loadContent('art', 'art-section');
-                        loadContent('photos', 'photos-section');
-                        loadContent('videos', 'videos-section');
-                        loadContent('journal', 'journal-section');
-                        loadContent('cat', 'cat-section');
-                        
-                        // Set today's date as the default
-                        const today = new Date();
-                        const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth()+1).toString().padStart(2, '0')}.${today.getFullYear()}`;
-                        document.getElementById('last-updated-date').textContent = formattedDate;
-                    });
+                                    videosList.appendChild(itemDiv);
+                                });
+                            } else {
+                                const emptyItem = document.createElement("div");
+                                emptyItem.className = "item";
+                                emptyItem.innerHTML = "<span class=\"date\">--.--.----</span>No entries yet";
+                                videosList.appendChild(emptyItem);
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error loading videos content:", error);
+                            const videosList = document.getElementById("videos-list");
+                            const emptyItem = document.createElement("div");
+                            emptyItem.className = "item";
+                            emptyItem.innerHTML = "<span class=\"date\">--.--.----</span>No entries yet";
+                            videosList.innerHTML = "";
+                            videosList.appendChild(emptyItem);
+                        });
                 </script>
             </body>
-            </html>
-            EOF
+            </html>' > pages/videos.html
           fi
       
       - name: Commit changes
         uses: EndBug/add-and-commit@v9
         with:
           message: 'Update content'
+          add: '.'
+          default_author: github_actions
