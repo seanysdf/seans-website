@@ -46,196 +46,414 @@ jobs:
         run: |
           # Create issue data file
           echo '${{ toJSON(github.event.issue) }}' > issue_data.json
-          cat issue_data.json  # Debug: Print the issue data
+          
+          # Print the issue data for debugging
+          echo "Issue title: ${{ github.event.issue.title }}"
+          echo "Issue labels: ${{ toJSON(github.event.issue.labels) }}"
           
           # Create processing script
           cat > process-issue.js << 'EOF'
           const fs = require('fs');
 
-          // Read the issue data
-          const issueData = JSON.parse(fs.readFileSync('issue_data.json', 'utf8'));
+          try {
+            // Read the issue data
+            const issueData = JSON.parse(fs.readFileSync('issue_data.json', 'utf8'));
 
-          // Get basic info
-          const title = issueData.title || '';
-          const body = issueData.body || '';
-          const createdAt = issueData.created_at;
-          const labels = issueData.labels || [];
+            // Get basic info
+            const title = issueData.title || '';
+            const body = issueData.body || '';
+            const createdAt = issueData.created_at;
+            const labels = issueData.labels || [];
 
-          // Debug info
-          console.log(`Processing issue: ${title}`);
-          console.log(`Labels: ${JSON.stringify(labels.map(l => l.name))}`);
+            // Debug info
+            console.log('============ ISSUE DATA ============');
+            console.log(`Title: "${title}"`);
+            console.log(`Labels: ${JSON.stringify(labels.map(l => l.name || 'unlabeled'))}`);
 
-          // Determine content type from title or labels
-          let contentType = 'art'; // Default to art
+            // Determine content type from title or labels
+            let contentType = 'art'; // Default to art
 
-          // Check title and labels for each content type
-          if (title.toLowerCase().includes('[photo]') || labels.some(l => l.name && l.name.toLowerCase() === 'photo')) {
-            contentType = 'photos';
-          } else if (title.toLowerCase().includes('[journal]') || labels.some(l => l.name && l.name.toLowerCase() === 'journal')) {
-            contentType = 'journal';
-          } else if (title.toLowerCase().includes('[cat]') || labels.some(l => l.name && l.name.toLowerCase() === 'cat')) {
-            contentType = 'cat';
-          } else if (title.toLowerCase().includes('[video]') || labels.some(l => l.name && l.name.toLowerCase() === 'video')) {
-            contentType = 'videos';
-          }
+            // First check for exact content type markers in the title
+            if (title.toLowerCase().match(/\[photo\]/i)) {
+              contentType = 'photos';
+            } else if (title.toLowerCase().match(/\[journal\]/i)) {
+              contentType = 'journal';
+            } else if (title.toLowerCase().match(/\[cat\]/i)) {
+              contentType = 'cat';
+            } else if (title.toLowerCase().match(/\[video\]/i)) {
+              contentType = 'videos';
+            } 
+            // Then check labels if no match in title
+            else if (labels.some(l => l.name && l.name.toLowerCase() === 'photo')) {
+              contentType = 'photos';
+            } else if (labels.some(l => l.name && l.name.toLowerCase() === 'journal')) {
+              contentType = 'journal';
+            } else if (labels.some(l => l.name && l.name.toLowerCase() === 'cat')) {
+              contentType = 'cat';
+            } else if (labels.some(l => l.name && l.name.toLowerCase() === 'video')) {
+              contentType = 'videos';
+            }
 
-          console.log(`Content type determined: ${contentType}`);
+            console.log(`Content type determined: ${contentType}`);
+            console.log('====================================');
 
-          // Format date
-          const date = new Date(createdAt);
-          const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth()+1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+            // Format date
+            const date = new Date(createdAt);
+            const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth()+1).toString().padStart(2, '0')}.${date.getFullYear()}`;
 
-          // Create ID from title
-          const cleanTitle = title.replace(/\[[^\]]+\]/g, '').trim();
-          const id = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+            // Create ID from title
+            const cleanTitle = title.replace(/\[[^\]]+\]/g, '').trim();
+            const id = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-          // Extract fields from body
-          function extractField(body, fieldName) {
-            const regex = new RegExp(`### ${fieldName}\\s+([^#]*?)(?=###|$)`, 's');
-            const match = body.match(regex);
-            return match ? match[1].trim() : '';
-          }
+            // Extract fields from body
+            function extractField(body, fieldName) {
+              const regex = new RegExp(`### ${fieldName}\\s+([^#]*?)(?=###|$)`, 's');
+              const match = body.match(regex);
+              return match ? match[1].trim() : '';
+            }
 
-          const description = extractField(body, 'Description');
-          const content = extractField(body, 'Content');
-          const image = extractField(body, 'Image URL \\(optional\\)');
-          const videoUrl = extractField(body, 'Video URL \\(optional\\)');
+            const description = extractField(body, 'Description');
+            const content = extractField(body, 'Content');
+            const image = extractField(body, 'Image URL \\(optional\\)');
+            const videoUrl = extractField(body, 'Video URL \\(optional\\)');
 
-          // Process video URL for embedding
-          function processVideoUrl(url) {
-            if (!url) return '';
-            
-            // Handle local repository paths
-            if (url.startsWith('/')) {
+            console.log('============ EXTRACTED FIELDS ============');
+            console.log(`Description: ${description.substring(0, 50)}...`);
+            console.log(`Content: ${content.substring(0, 50)}...`);
+            console.log(`Image URL: ${image || 'None'}`);
+            console.log(`Video URL: ${videoUrl || 'None'}`);
+            console.log('=========================================');
+
+            // Process video URL for embedding
+            function processVideoUrl(url) {
+              if (!url) return '';
+              
+              console.log(`Processing video URL: ${url}`);
+              
+              // Handle local repository paths
+              if (url.startsWith('/')) {
+                return `<video controls width="100%"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+              }
+              
+              // YouTube
+              if (url.includes('youtube.com/watch?v=')) {
+                const videoId = url.split('v=')[1].split('&')[0];
+                return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+              }
+              
+              // YouTube short URL
+              if (url.includes('youtu.be/')) {
+                const videoId = url.split('youtu.be/')[1].split('?')[0];
+                return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+              }
+              
+              // Vimeo
+              if (url.includes('vimeo.com/')) {
+                const videoId = url.split('vimeo.com/')[1].split('?')[0];
+                return `<iframe src="https://player.vimeo.com/video/${videoId}" width="100%" height="315" frameborder="0" allowfullscreen></iframe>`;
+              }
+              
+              // Default: assume direct link to video file
               return `<video controls width="100%"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
             }
-            
-            // YouTube
-            if (url.includes('youtube.com/watch?v=')) {
-              const videoId = url.split('v=')[1].split('&')[0];
-              return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+
+            // Create the new item
+            const newItem = {
+              id: id,
+              title: cleanTitle,
+              date: formattedDate,
+              description: description || null,
+              content: content,
+              image: image || null,
+              video: videoUrl || null,
+              url: `content/${contentType}/${id}.html`
+            };
+
+            console.log('============ NEW ITEM ============');
+            console.log(JSON.stringify(newItem, null, 2));
+            console.log('=================================');
+
+            // Read existing data
+            const dataPath = `data/${contentType}.json`;
+            let data = { items: [] };
+
+            console.log(`Reading from data file: ${dataPath}`);
+            if (fs.existsSync(dataPath)) {
+              try {
+                data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+                console.log(`Successfully read ${dataPath} with ${data.items.length} existing items`);
+              } catch (error) {
+                console.error(`Error reading ${dataPath}: ${error.message}`);
+                console.log('Creating new file.');
+              }
+            } else {
+              console.log(`${dataPath} does not exist, will create new file`);
             }
-            
-            // YouTube short URL
-            if (url.includes('youtu.be/')) {
-              const videoId = url.split('youtu.be/')[1].split('?')[0];
-              return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+
+            // Add new item (or update existing one with same ID)
+            const existingIndex = data.items.findIndex(item => item.id === id);
+            if (existingIndex >= 0) {
+              console.log(`Updating existing item at index ${existingIndex}`);
+              data.items[existingIndex] = newItem;
+            } else {
+              console.log('Adding new item to beginning of array');
+              data.items.unshift(newItem); // Add to beginning (newest first)
             }
-            
-            // Vimeo
-            if (url.includes('vimeo.com/')) {
-              const videoId = url.split('vimeo.com/')[1].split('?')[0];
-              return `<iframe src="https://player.vimeo.com/video/${videoId}" width="100%" height="315" frameborder="0" allowfullscreen></iframe>`;
-            }
-            
-            // Default: assume direct link to video file
-            return `<video controls width="100%"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+
+            // Write updated data
+            fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+            console.log(`Updated ${dataPath} with entry: ${cleanTitle}`);
+
+            // Create HTML file
+            const htmlContent = `<!DOCTYPE html>
+            <html>
+            <head>
+                <title>${cleanTitle} | ART ARCHIVE</title>
+                <link rel="stylesheet" href="../../css/style.css">
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    /* Additional styles specific to content pages */
+                    .content {
+                        line-height: 1.6;
+                        margin-top: 20px;
+                    }
+                    
+                    .image {
+                        margin: 20px 0;
+                        text-align: center;
+                    }
+                    
+                    .image img {
+                        max-width: 100%;
+                        height: auto;
+                        border: 1px solid #ddd;
+                    }
+                    
+                    .video-container {
+                        margin: 20px 0;
+                        position: relative;
+                        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+                        height: 0;
+                        overflow: hidden;
+                        border: 1px solid #ddd;
+                    }
+                    
+                    .video-container iframe,
+                    .video-container video {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${cleanTitle}</h1>
+                <div class="date">${formattedDate}</div>
+                ${description ? `<div class="description">${description}</div>` : ''}
+                
+                ${image ? `<div class="image"><img src="${image}" alt="${cleanTitle}"></div>` : ''}
+                
+                ${videoUrl ? `<div class="video-container">${processVideoUrl(videoUrl)}</div>` : ''}
+                
+                <div class="content">
+                    ${content.replace(/\n/g, '<br>')}
+                </div>
+                <div class="footer">
+                    <a href="/">← back to archive</a>
+                </div>
+            </body>
+            </html>`;
+
+            fs.writeFileSync(`content/${contentType}/${id}.html`, htmlContent);
+            console.log(`Created/updated entry: ${cleanTitle} (content/${contentType}/${id}.html)`);
+
+          } catch (error) {
+            console.error(`FATAL ERROR: ${error.message}`);
+            console.error(error);
+            process.exit(1);
           }
-
-          // Create the new item
-          const newItem = {
-            id: id,
-            title: cleanTitle,
-            date: formattedDate,
-            description: description || null,
-            content: content,
-            image: image || null,
-            video: videoUrl || null,
-            url: `content/${contentType}/${id}.html`
-          };
-
-          // Read existing data
-          const dataPath = `data/${contentType}.json`;
-          let data = { items: [] };
-
-          if (fs.existsSync(dataPath)) {
-            try {
-              data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-            } catch (error) {
-              console.log(`Error reading ${dataPath}. Creating new file.`);
-            }
-          }
-
-          // Add new item (or update existing one with same ID)
-          const existingIndex = data.items.findIndex(item => item.id === id);
-          if (existingIndex >= 0) {
-            data.items[existingIndex] = newItem;
-          } else {
-            data.items.unshift(newItem); // Add to beginning (newest first)
-          }
-
-          // Write updated data
-          fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-          console.log(`Updated ${dataPath} with entry: ${cleanTitle}`);
-
-          // Create HTML file
-          const htmlContent = `<!DOCTYPE html>
-          <html>
-          <head>
-              <title>${cleanTitle} | ART ARCHIVE</title>
-              <link rel="stylesheet" href="../../css/style.css">
-              <style>
-                  /* Additional styles specific to content pages */
-                  .content {
-                      line-height: 1.6;
-                      margin-top: 20px;
-                  }
-                  
-                  .image {
-                      margin: 20px 0;
-                  }
-                  
-                  .video-container {
-                      margin: 20px 0;
-                      position: relative;
-                      padding-bottom: 56.25%; /* 16:9 aspect ratio */
-                      height: 0;
-                      overflow: hidden;
-                  }
-                  
-                  .video-container iframe,
-                  .video-container video {
-                      position: absolute;
-                      top: 0;
-                      left: 0;
-                      width: 100%;
-                      height: 100%;
-                  }
-              </style>
-          </head>
-          <body>
-              <h1>${cleanTitle}</h1>
-              <div class="date">${formattedDate}</div>
-              ${description ? `<div class="description">${description}</div>` : ''}
-              
-              ${image ? `<div class="image"><img src="${image}" alt="${cleanTitle}" style="max-width:100%;"></div>` : ''}
-              
-              ${videoUrl ? `<div class="video-container">${processVideoUrl(videoUrl)}</div>` : ''}
-              
-              <div class="content">
-                  ${content.replace(/\n/g, '<br>')}
-              </div>
-              <div class="footer">
-                  <a href="/">← back to archive</a>
-              </div>
-          </body>
-          </html>`;
-
-          fs.writeFileSync(`content/${contentType}/${id}.html`, htmlContent);
-          console.log(`Created/updated entry: ${cleanTitle} (content/${contentType}/${id}.html)`);
           EOF
           
           # Run the processing script
           node process-issue.js
       
+      - name: Create or update index.html if it doesn't exist
+        run: |
+          if [ ! -f index.html ]; then
+            cat > index.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>ART ARCHIVE</title>
+                <link rel="stylesheet" href="css/style.css">
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+            </head>
+            <body>
+                <h1>ART ARCHIVE</h1>
+                <div class="subtitle">personal collection of works / updated irregularly</div>
+                
+                <h2>ART</h2>
+                <div id="art-section">
+                    <div class="loading">Loading art entries...</div>
+                </div>
+                
+                <h2>PHOTOS</h2>
+                <div id="photos-section">
+                    <div class="loading">Loading photo entries...</div>
+                </div>
+                
+                <h2>VIDEOS</h2>
+                <div id="videos-section">
+                    <div class="loading">Loading video entries...</div>
+                </div>
+                
+                <h2>JOURNAL</h2>
+                <div id="journal-section">
+                    <div class="loading">Loading journal entries...</div>
+                </div>
+                
+                <h2>MY CAT</h2>
+                <div id="cat-section" class="cat-section">
+                    <div class="loading">Loading cat content...</div>
+                </div>
+                
+                <h2>SOMETHING RANDOM</h2>
+                
+                <div class="random">
+                found a roll of film from 2019 under my bed. getting it developed tomorrow.<br>
+                <br>
+                current studio playlist:<br>
+                - boards of canada - music has the right to children<br>
+                - autechre - amber<br>
+                - aphex twin - selected ambient works 85-92<br>
+                - burial - untrue<br>
+                <br>
+                dream from last night: standing in an empty museum where all the paintings were actually windows<br>
+                <br>
+                next experiment: trying to create a camera obscura in my bathroom
+                </div>
+                
+                <div class="footer">
+                    last updated: <span id="last-updated-date">15.05.2024</span> | no images loaded = faster browsing<br>
+                    <a href="mailto:artist@example.com">contact</a> | 
+                    <a href="pages/about.html">about</a>
+                </div>
+
+                <script>
+                    // Function to load content from JSON file
+                    function loadContent(contentType, elementId, limit = 5) {
+                        console.log(`Loading ${contentType} content...`);
+                        
+                        // Get the content section element
+                        const contentSection = document.getElementById(elementId);
+                        if (!contentSection) {
+                            console.error(`Element with ID ${elementId} not found`);
+                            return;
+                        }
+                        
+                        // Attempt to fetch the data
+                        fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
+                            .then(response => {
+                                console.log(`${contentType} response status:`, response.status);
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log(`${contentType} data:`, data);
+                                contentSection.innerHTML = ''; // Clear loading message
+                                
+                                // Display the most recent items
+                                if (data && data.items && data.items.length > 0) {
+                                    // Update the last updated date
+                                    if (data.items[0] && data.items[0].date) {
+                                        document.getElementById('last-updated-date').textContent = data.items[0].date;
+                                    }
+                                    
+                                    data.items.slice(0, limit).forEach(item => {
+                                        const itemDiv = document.createElement('div');
+                                        itemDiv.className = contentType === 'cat' ? 'cat-item' : 'item';
+                                        
+                                                                                // Create date span
+                                        const dateSpan = document.createElement('span');
+                                        dateSpan.className = 'date';
+                                        dateSpan.textContent = item.date;
+                                        itemDiv.appendChild(dateSpan);
+                                        
+                                        // Create title link
+                                        const titleLink = document.createElement('a');
+                                        titleLink.href = item.url;
+                                        titleLink.textContent = item.title;
+                                        itemDiv.appendChild(titleLink);
+                                        
+                                        // Add description if available
+                                        if (item.description) {
+                                            const descSpan = document.createElement('span');
+                                            descSpan.className = 'description';
+                                            descSpan.textContent = item.description;
+                                            itemDiv.appendChild(descSpan);
+                                        }
+                                        
+                                        contentSection.appendChild(itemDiv);
+                                    });
+                                    
+                                    // Add "see all" link if there are more than the limit
+                                    if (data.items.length > limit) {
+                                        const seeAllDiv = document.createElement('div');
+                                        seeAllDiv.className = 'view-all';
+                                        seeAllDiv.innerHTML = `<a href="pages/${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
+                                        contentSection.appendChild(seeAllDiv);
+                                    }
+                                } else {
+                                    const emptyItem = document.createElement('div');
+                                    emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
+                                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                                    contentSection.appendChild(emptyItem);
+                                }
+                            })
+                            .catch(error => {
+                                console.error(`Error loading ${contentType} content:`, error);
+                                contentSection.innerHTML = '';
+                                const emptyItem = document.createElement('div');
+                                emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
+                                emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                                contentSection.appendChild(emptyItem);
+                            });
+                    }
+
+                    // Load all content types when the page loads
+                    document.addEventListener('DOMContentLoaded', function() {
+                        console.log("DOM loaded, starting content loading");
+                        loadContent('art', 'art-section');
+                        loadContent('photos', 'photos-section');
+                        loadContent('videos', 'videos-section');
+                        loadContent('journal', 'journal-section');
+                        loadContent('cat', 'cat-section');
+                        
+                        // Set today's date as the default
+                        const today = new Date();
+                        const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth()+1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+                        document.getElementById('last-updated-date').textContent = formattedDate;
+                    });
+                </script>
+            </body>
+            </html>
+            EOF
+          fi
+      
       - name: Create videos page if it doesn't exist
         run: |
           if [ ! -f pages/videos.html ]; then
-            echo '<!DOCTYPE html>
+            cat > pages/videos.html << 'EOF'
+            <!DOCTYPE html>
             <html>
             <head>
                 <title>ART ARCHIVE | All Videos</title>
                 <link rel="stylesheet" href="../css/style.css">
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
             </head>
             <body>
                 <h1>ALL VIDEOS</h1>
@@ -308,7 +526,140 @@ jobs:
                         });
                 </script>
             </body>
-            </html>' > pages/videos.html
+            </html>
+            EOF
+          fi
+      
+      - name: Create CSS file if it doesn't exist
+        run: |
+          if [ ! -f css/style.css ]; then
+            cat > css/style.css << 'EOF'
+            body {
+                background-color: #f8f8f8;
+                font-family: "Lucida Console", Monaco, monospace;
+                margin: 0;
+                padding: 20px;
+                color: #222222;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            
+            h1 {
+                font-size: 20px;
+                margin-bottom: 5px;
+                text-transform: uppercase;
+            }
+            
+            h2 {
+                font-size: 16px;
+                margin-top: 25px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid #000;
+                padding-bottom: 3px;
+                text-transform: uppercase;
+            }
+            
+            a {
+                color: #000;
+                text-decoration: none;
+            }
+            
+            a:hover {
+                text-decoration: underline;
+            }
+            
+            a:visited {
+                color: #555;
+            }
+            
+            .date {
+                color: #666;
+                font-size: 12px;
+                display: inline-block;
+                width: 90px;
+            }
+            
+            .description {
+                color: #444;
+                font-size: 12px;
+                margin-left: 10px;
+                font-style: italic;
+            }
+            
+            .item {
+                margin-bottom: 6px;
+                line-height: 1.4;
+            }
+            
+            .footer {
+                margin-top: 30px;
+                font-size: 11px;
+                color: #666;
+                border-top: 1px solid #ccc;
+                padding-top: 10px;
+            }
+            
+            .random {
+                margin: 20px 0;
+                padding: 10px;
+                border: 1px solid #ccc;
+                background-color: #f0f0f0;
+                font-family: "Courier New", monospace;
+            }
+            
+            .subtitle {
+                color: #666;
+                font-size: 12px;
+                margin-bottom: 20px;
+            }
+            
+            .cat-section {
+                margin: 20px 0;
+            }
+            
+            .cat-item {
+                margin-bottom: 8px;
+            }
+            
+            .view-all {
+                text-align: right;
+                margin-top: 5px;
+                font-size: 12px;
+            }
+            
+            .loading {
+                color: #888;
+                font-style: italic;
+                font-size: 12px;
+                margin-left: 90px;
+            }
+            
+            .content {
+                line-height: 1.6;
+                margin-top: 20px;
+            }
+            
+            .image {
+                margin: 20px 0;
+            }
+            
+            .video-container {
+                margin: 20px 0;
+                position: relative;
+                padding-bottom: 56.25%; /* 16:9 aspect ratio */
+                height: 0;
+                overflow: hidden;
+            }
+            
+            .video-container iframe,
+            .video-container video {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            EOF
           fi
       
       - name: Commit changes
