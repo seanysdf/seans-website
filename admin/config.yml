@@ -2,13 +2,9 @@ backend:
   name: github
   repo: seanysdf/seans-website
   branch: main
-  client_id: Ov23liAij6nI2unrcZ1e
-  auth_type: pkce # Changed this line
 
 media_folder: "assets/images"
 public_folder: "/assets/images"
-
-# Rest of your collections config stays the same
 
 collections:
   - name: "videos"
