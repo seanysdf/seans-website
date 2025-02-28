@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: seanysdf/seans-website.github.io  # Replace with your actual GitHub username
+  repo: seanysdf/seans-website
   branch: main
   base_url: https://api.netlify.com
   auth_endpoint: auth
