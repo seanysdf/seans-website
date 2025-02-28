@@ -52,6 +52,21 @@
             color: #551A8B;
         }
 
+        .post-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .post-list li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #CCCCCC;
+        }
+
+        .date {
+            color: #666666;
+            font-size: 0.9em;
+        }
+
         .footer {
             text-align: center;
             border-top: 1px solid #000000;
@@ -59,50 +74,20 @@
             padding: 10px;
         }
 
-        /* For the photo/video grid */
-        .media-grid {
-            display: table;
-            width: 100%;
-        }
-
-        .media-item {
-            display: table-cell;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .media-item img {
-            max-width: 200px;
-            border: 1px solid #000000;
-        }
-
-        /* For the contact form */
-        .contact-form input,
-        .contact-form textarea {
+        .message-form input,
+        .message-form textarea {
             width: 100%;
             margin: 5px 0;
             padding: 5px;
             font-family: "Times New Roman", Times, serif;
         }
 
-        .contact-form button {
+        .message-form button {
             background-color: #EEEEEE;
             border: 1px solid #000000;
             padding: 5px 15px;
             cursor: pointer;
             font-family: "Times New Roman", Times, serif;
-        }
-
-        /* Journal entry style */
-        .journal-entry {
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px dotted #CCCCCC;
-        }
-
-        .journal-date {
-            color: #666666;
-            font-style: italic;
         }
     </style>
 </head>
@@ -115,35 +100,50 @@
 
         <div class="content">
             <div class="section">
-                <h2 class="section-title">Welcome!</h2>
-                <p>Hello and welcome to my personal corner of the internet! This is where I share my thoughts, pictures, and various other things.</p>
+                <h2 class="section-title">Videos</h2>
+                <ul class="post-list">
+                    <li>
+                        <span class="date">[07/20/23]</span>
+                        <a href="videos/video1.html">Cool Video Title</a>
+                    </li>
+                    <li>
+                        <span class="date">[07/19/23]</span>
+                        <a href="videos/video2.html">Another Video</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Stuff</h2>
+                <ul class="post-list">
+                    <li>
+                        <span class="date">[07/20/23]</span>
+                        <a href="stuff/thing1.html">Art Thing</a>
+                    </li>
+                    <li>
+                        <span class="date">[07/19/23]</span>
+                        <a href="stuff/thing2.html">Photo Thing</a>
+                    </li>
+                </ul>
             </div>
 
             <div class="section">
                 <h2 class="section-title">Journal</h2>
-                <div class="journal-entry">
-                    <div class="journal-date">July 20, 2023</div>
-                    <p>This is my first journal entry! More to come soon...</p>
-                </div>
+                <ul class="post-list">
+                    <li>
+                        <span class="date">[07/20/23]</span>
+                        <a href="journal/entry1.html">First Entry</a>
+                    </li>
+                    <li>
+                        <span class="date">[07/19/23]</span>
+                        <a href="journal/entry2.html">Second Entry</a>
+                    </li>
+                </ul>
             </div>
 
             <div class="section">
-                <h2 class="section-title">Photos & Videos</h2>
-                <div class="media-grid">
-                    <div class="media-item">
-                        <img src="placeholder.jpg" alt="Photo 1">
-                        <p>My Cat</p>
-                    </div>
-                    <div class="media-item">
-                        <img src="placeholder.jpg" alt="Photo 2">
-                        <p>Random Art</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-title">Send Me a Message</h2>
-                <form class="contact-form">
+                <h2 class="section-title">Send Message/Picture</h2>
+                <form class="message-form">
                     <p>
                         <label>Name (optional):<br>
                         <input type="text" name="name">
@@ -151,19 +151,37 @@
                     </p>
                     <p>
                         <label>Message:<br>
-                        <textarea name="message" rows="5" required></textarea>
+                        <textarea name="message" rows="5"></textarea>
                         </label>
                     </p>
                     <p>
-                        <button type="submit">Send Message</button>
+                        <label>Picture (optional):<br>
+                        <input type="file" name="picture" accept="image/*">
+                        </label>
+                    </p>
+                    <p>
+                        <button type="submit">Send</button>
                     </p>
                 </form>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Random</h2>
+                <ul class="post-list">
+                    <li>
+                        <span class="date">[07/20/23]</span>
+                        <a href="random/thing1.html">Random Thing 1</a>
+                    </li>
+                    <li>
+                        <span class="date">[07/19/23]</span>
+                        <a href="random/thing2.html">Random Thing 2</a>
+                    </li>
+                </ul>
             </div>
         </div>
 
         <div class="footer">
             <p>© 2023 - Made with ♥ and nostalgia</p>
-            <img src="ie_logo.gif" alt="Best viewed in Internet Explorer">
         </div>
     </div>
 </body>
