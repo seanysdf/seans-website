@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ART ARCHIVE</title>
+    <style>
+        body {
+            background-color: #f8f8f8;
+            font-family: "Lucida Console", Monaco, monospace;
+            margin: 0;
+            padding: 20px;
+            color: #222222;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        
+        h2 {
+            font-size: 16px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+            text-transform: uppercase;
+        }
+        
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        a:visited {
+            color: #555;
+        }
+        
+        .date {
+            color: #666;
+            font-size: 12px;
+            display: inline-block;
+            width: 90px;
+        }
+        
+        .description {
+            color: #444;
+            font-size: 12px;
+            margin-left: 10px;
+            font-style: italic;
+        }
+        
+        .item {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        .random {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            font-family: "Courier New", monospace;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .cat-section {
+            margin: 20px 0;
+        }
+        
+        .cat-item {
+            margin-bottom: 8px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        /* Modal for content display */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+        }
+        
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .modal-text {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            color: white;
+            padding: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+        }
+        
+        .video-container iframe,
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>ART ARCHIVE</h1>
+    <div class="subtitle">personal collection of works / updated irregularly</div>
+    
+    <h2>ART</h2>
+    <div id="art-content" class="loading">Loading art content...</div>
+    <div style="text-align: right; margin-top: 5px;">
+        <a href="#" id="art-all-link">see all art (<span id="art-count">0</span>) →</a>
+    </div>
+    
+    <h2>PHOTOS</h2>
+    <div id="photos-content" class="loading">Loading photo content...</div>
+    <div style="text-align: right; margin-top: 5px;">
+        <a href="#" id="photos-all-link">see all photos (<span id="photos-count">0</span>) →</a>
+    </div>
+    
+    <h2>JOURNAL</h2>
+    <div id="journal-content" class="loading">Loading journal entries...</div>
+    <div style="text-align: right; margin-top: 5px;">
+        <a href="#" id="journal-all-link">see all journal entries (<span id="journal-count">0</span>) →</a>
+    </div>
+    
+    <h2>MY CAT</h2>
+    <div id="cat-content" class="loading">Loading cat content...</div>
+    <div style="text-align: right; margin-top: 5px;">
+        <a href="#" id="cat-all-link">see all cat content (<span id="cat-count">0</span>) →</a>
+    </div>
+    
+    <h2>SOMETHING RANDOM</h2>
+    <div id="random-content" class="random">
+        Loading random thoughts...
+    </div>
+    
+    <div class="footer">
+        last updated: <span id="last-updated">loading...</span> | no images loaded = faster browsing<br>
+        <a href="mailto:artist@example.com">contact</a> | 
+        <a href="#" id="archive-link">complete archive</a> | 
+        <a href="#" id="about-link">about</a>
+    </div>
+    
+    <!-- Modal for displaying content -->
+    <div id="contentModal" class="modal">
+        <span class="close">&times;</span>
+        <div id="modal-container"></div>
+    </div>
+    
+    <script>
+        // Configuration - REPLACE WITH YOUR DETAILS
+        const GITHUB_USERNAME = 'your-username';
+        const GITHUB_REPO = 'your-repo-name';
+        
+        // Categories and their corresponding labels
+        const CATEGORIES = {
+            'art': 'art',
+            'photos': 'photo',
+            'journal': 'journal',
+            'cat': 'cat',
+            'random': 'random',
+            'about': 'about'
+        };
+        
+        // Store all fetched issues
+        let allIssues = [];
+        
+        // Fetch issues from GitHub
+        async function fetchIssues() {
+            try {
+                const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/issues?state=open&per_page=100`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                allIssues = await response.json();
+                
+                // Process issues by category
+                processIssuesByCategory();
+                updateLastUpdated();
+                
+                // Set up event listeners for full category views
+                setupEventListeners();
+            } catch (error) {
+                console.error('Error fetching issues:', error);
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.textContent = 'Error loading content. Please try again later.';
+                });
+            }
+        }
+        
+        // Process issues by category
+        function processIssuesByCategory() {
+            // Clear loading messages
+            document.querySelectorAll('.loading').forEach(el => {
+                el.innerHTML = '';
+                el.classList.remove('loading');
+            });
+            
+            // Process each category
+            for (const [category, label] of Object.entries(CATEGORIES)) {
+                const issues = allIssues.filter(issue => 
+                    issue.labels.some(l => l.name.toLowerCase() === label.toLowerCase())
+                );
+                
+                // Update count
+                const countElement = document.getElementById(`${category}-count`);
+                if (countElement) {
+                    countElement.textContent = issues.length;
+                }
+                
+                // Display content
+                if (category === 'random') {
+                    displayRandomContent(issues);
+                } else if (category !== 'about') {
+                    displayCategoryContent(category, issues);
+                }
+            }
+        }
+        
+        // Display content for a specific category
+        function displayCategoryContent(category, issues) {
+            const containerElement = document.getElementById(`${category}-content`);
+            if (!containerElement) return;
+            
+            // Sort issues by date (newest first)
+            issues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            // Display only the first 5 issues
+            const displayIssues = issues.slice(0, 5);
+            
+            displayIssues.forEach(issue => {
+                const date = new Date(issue.created_at);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                
+                // Extract description from issue body if present
+                let description = '';
+                const descMatch = issue.body.match(/\[description\](.*?)(\[|\n|$)/s);
+                if (descMatch) {
+                    description = descMatch[1].trim();
+                }
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = category === 'cat' ? 'cat-item' : 'item';
+                itemDiv.innerHTML = `
+                    <span class="date">${formattedDate}</span>
+                    <a href="#" data-issue-id="${issue.number}">${issue.title}</a>
+                    ${description ? `<span class="description">${description}</span>` : ''}
+                `;
+                
+                containerElement.appendChild(itemDiv);
+                
+                // Add click event to open modal
+                itemDiv.querySelector('a').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openContentModal(issue);
+                });
+            });
+        }
+        
+        // Display random content
+        function displayRandomContent(issues) {
+            const containerElement = document.getElementById('random-content');
+            if (!containerElement || issues.length === 0) return;
+            
+            // Pick a random issue
+            const randomIssue = issues[Math.floor(Math.random() * issues.length)];
+            
+            // Format the content
+            containerElement.innerHTML = randomIssue.body.replace(/\[description\].*?(\[|\n|$)/s, '')
+                                                    .replace(/\[media\].*?(\[|\n|$)/s, '')
+                                                    .trim()
+                                                    .replace(/\n/g, '<br>');
+        }
+        
+        // Update last updated date
+        function updateLastUpdated() {
+            if (allIssues.length > 0) {
+                // Find most recent issue
+                const mostRecentIssue = allIssues.reduce((latest, current) => {
+                    return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
+                });
+                
+                const date = new Date(mostRecentIssue.created_at);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                
+                document.getElementById('last-updated').textContent = formattedDate;
+            } else {
+                document.getElementById('last-updated').textContent = 'no content yet';
+            }
+        }
+        
+        // Open modal with content
+        function openContentModal(issue) {
+            const modal = document.getElementById('contentModal');
+            const modalContainer = document.getElementById('modal-container');
+            
+            // Extract media URLs if present
+            const mediaMatch = issue.body.match(/\[media\](.*?)(\[|\n|$)/s);
+            const mediaUrls = mediaMatch ? mediaMatch[1].trim().split('\n').map(url => url.trim()).filter(url => url) : [];
+            
+            // Prepare content HTML
+            let contentHTML = '';
+            
+            // Handle different media types
+            if (mediaUrls.length > 0) {
+                mediaUrls.forEach(url => {
+                    if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                        // Video content
+                        contentHTML += `
+                            <div class="video-container">
+                                <video controls>
+                                    <source src="${url}" type="video/${url.split('.').pop().toLowerCase()}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        `;
+                    } else if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                        // Image content
+                        contentHTML += `<img src="${url}" class="modal-content" alt="${issue.title}">`;
+                    } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                        // YouTube embed
+                        let videoId = '';
+                        if (url.includes('youtube.com/watch')) {
+                            videoId = new URL(url).searchParams.get('v');
+                        } else if (url.includes('youtu.be/')) {
+                            videoId = url.split('youtu.be/')[1];
+                        }
+                        
+                        if (videoId) {
+                            contentHTML += `
+                                <div class="video-container">
+                                    <iframe src="https://www.youtube.com/embed/${videoId}" 
+                                    frameborder="0" allowfullscreen></iframe>
+                                </div>
+                            `;
+                        }
+                    } else if (url.includes('vimeo.com')) {
+                        // Vimeo embed
+                        const vimeoId = url.split('/').pop();
+                        contentHTML += `
+                            <div class="video-container">
+                                <iframe src="https://player.vimeo.com/video/${vimeoId}" 
+                                frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            
+            // Add text content (excluding metadata tags)
+            let textContent = issue.body
+                .replace(/\[description\].*?(\[|\n|$)/s, '')
+                .replace(/\[media\].*?(\[|\n|$)/s, '')
+                .trim();
+            
+            if (textContent) {
+                contentHTML += `<div class="modal-text">${textContent.replace(/\n/g, '<br>')}</div>`;
+            }
+            
+            // Display in modal
+            modalContainer.innerHTML = contentHTML;
+            modal.style.display = 'block';
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Close modal when clicking the X
+            document.querySelector('.close').addEventListener('click', () => {
+                document.getElementById('contentModal').style.display = 'none';
+            });
+            
+            // Close modal when clicking outside the content
+            window.addEventListener('click', (e) => {
+                if (e.target === document.getElementById('contentModal')) {
+                    document.getElementById('contentModal').style.display = 'none';
+                }
+            });
+            
+            // Set up category view links
+            for (const category of Object.keys(CATEGORIES)) {
+                if (category !== 'random' && category !== 'about') {
+                    const allLink = document.getElementById(`${category}-all-link`);
+                    if (allLink) {
+                        allLink.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            showAllCategoryContent(category);
+                        });
+                    }
+                }
+            }
+            
+            // About link
+            document.getElementById('about-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                showAboutContent();
+            });
+            
+            // Archive link
+            document.getElementById('archive-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                showAllArchiveContent();
+            });
+        }
+        
+        // Show all content for a specific category
+        function showAllCategoryContent(category) {
+            const modal = document.getElementById('contentModal');
+            const modalContainer = document.getElementById('modal-container');
+            
+            const issues = allIssues.filter(issue => 
+                issue.labels.some(l => l.name.toLowerCase() === CATEGORIES[category].toLowerCase())
+            );
+            
+            // Sort issues by date (newest first)
+            issues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            let contentHTML = `
+                <div class="modal-text">
+                    <h1>${category.toUpperCase()}</h1>
+                    <div class="subtitle">all ${category} entries (${issues.length})</div>
+            `;
+            
+            issues.forEach(issue => {
+                const date = new Date(issue.created_at);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                
+                // Extract description
+                let description = '';
+                const descMatch = issue.body.match(/\[description\](.*?)(\[|\n|$)/s);
+                if (descMatch) {
+                    description = descMatch[1].trim();
+                }
+                
+                contentHTML += `
+                    <div class="item">
+                        <span class="date">${formattedDate}</span>
+                        <a href="#" data-issue-id="${issue.number}">${issue.title}</a>
+                        ${description ? `<span class="description">${description}</span>` : ''}
+                    </div>
+                `;
+            });
+            
+            contentHTML += '</div>';
+            
+            // Display in modal
+            modalContainer.innerHTML = contentHTML;
+            modal.style.display = 'block';
+            
+            // Add click events to links
+            modalContainer.querySelectorAll('a[data-issue-id]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const issueId = parseInt(link.getAttribute('data-issue-id'));
+                    const issue = allIssues.find(i => i.number === issueId);
+                    if (issue) {
+                        openContentModal(issue);
+                    }
+                });
+            });
+        }
+        
+        // Show about content
+        function showAboutContent() {
+            const aboutIssues = allIssues.filter(issue => 
+                issue.labels.some(l => l.name.toLowerCase() === CATEGORIES['about'].toLowerCase())
+            );
+            
+            if (aboutIssues.length > 0) {
+                // Use the most recent about issue
+                const aboutIssue = aboutIssues.sort((a, b) => 
+                    new Date(b.created_at) - new Date(a.created_at)
+                )[0];
+                
+                openContentModal(aboutIssue);
+            } else {
+                const modal = document.getElementById('contentModal');
+                const modalContainer = document.getElementById('modal-container');
+                
+                modalContainer.innerHTML = `
+                    <div class="modal-text">
+                        <h1>ABOUT</h1>
+                        <p>No about information available yet.</p>
+                    </div>
+                `;
+                
+                modal.style.display = 'block';
+            }
+        }
+        
+        // Show all archive content
+        function showAllArchiveContent() {
+            const modal = document.getElementById('contentModal');
+            const modalContainer = document.getElementById('modal-container');
+            
+            // Sort all issues by date (newest first)
+            const sortedIssues = [...allIssues].sort((a, b) => 
+                new Date(b.created_at) - new Date(a.created_at)
+            );
+            
+            let contentHTML = `
+                <div class="modal-text">
+                    <h1>COMPLETE ARCHIVE</h1>
+                    <div class="subtitle">all entries (${sortedIssues.length})</div>
+            `;
+            
+            sortedIssues.forEach(issue => {
+                const date = new Date(issue.created_at);
+                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                
+                // Get category from labels
+                let category = 'misc';
+                for (const [cat, label] of Object.entries(CATEGORIES)) {
+                    if (issue.labels.some(l => l.name.toLowerCase() === label.toLowerCase())) {
+                        category = cat;
+                        break;
+                    }
+                }
+                
+                // Skip about and random entries in the archive
+                if (category === 'about' || category === 'random') {
+                    return;
+                }
+                
+                // Extract description
+                let description = '';
+                const descMatch = issue.body.match(/\[description\](.*?)(\[|\n|$)/s);
+                if (descMatch) {
+                    description = descMatch[1].trim();
+                }
+                
+                contentHTML += `
+                    <div class="item">
+                        <span class="date">${formattedDate}</span>
+                        <a href="#" data-issue-id="${issue.number}">${issue.title}</a>
+                        <span style="color:#888; margin-left:5px;">[${category}]</span>
+                        ${description ? `<span class="description">${description}</span>` : ''}
+                    </div>
+                `;
+            });
+            
+            contentHTML += '</div>';
+            
+            // Display in modal
+            modalContainer.innerHTML = contentHTML;
+            modal.style.display = 'block';
+            
+            // Add click events to links
+            modalContainer.querySelectorAll('a[data-issue-id]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const issueId = parseInt(link.getAttribute('data-issue-id'));
+                    const issue = allIssues.find(i => i.number === issueId);
+                    if (issue) {
+                        openContentModal(issue);
+                    }
+                });
+            });
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', fetchIssues);
+    </script>
+</body>
+</html>
