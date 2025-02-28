@@ -94,7 +94,7 @@
             text-align: center;
             color: #666;
             font-style: italic;
-            padding: 20px;
+            padding: 10px;
         }
         
         /* Modal for content display */
@@ -107,6 +107,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.9);
+            overflow-y: auto;
         }
         
         .modal-content {
@@ -143,6 +144,7 @@
             font-size: 40px;
             font-weight: bold;
             transition: 0.3s;
+            z-index: 110;
         }
         
         .close:hover,
@@ -158,6 +160,7 @@
             height: 0;
             overflow: hidden;
             max-width: 100%;
+            margin-bottom: 20px;
         }
         
         .video-container iframe,
@@ -168,6 +171,12 @@
             width: 100%;
             height: 100%;
         }
+        
+        img.content-image {
+            max-width: 100%;
+            margin-bottom: 20px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -175,27 +184,35 @@
     <div class="subtitle">personal collection of works / updated irregularly</div>
     
     <h2>ART</h2>
-    <div id="art-content" class="loading">Loading art content...</div>
-    <div style="text-align: right; margin-top: 5px;">
-        <a href="#" id="art-all-link">see all art (<span id="art-count">0</span>) →</a>
+    <div id="art-section">
+        <div id="art-content" class="loading">Loading art content...</div>
+        <div style="text-align: right; margin-top: 5px;">
+            <a href="#" id="art-all-link">see all art (<span id="art-count">0</span>) →</a>
+        </div>
     </div>
     
     <h2>PHOTOS</h2>
-    <div id="photos-content" class="loading">Loading photo content...</div>
-    <div style="text-align: right; margin-top: 5px;">
-        <a href="#" id="photos-all-link">see all photos (<span id="photos-count">0</span>) →</a>
+    <div id="photos-section">
+        <div id="photos-content" class="loading">Loading photo content...</div>
+        <div style="text-align: right; margin-top: 5px;">
+            <a href="#" id="photos-all-link">see all photos (<span id="photos-count">0</span>) →</a>
+        </div>
     </div>
     
     <h2>JOURNAL</h2>
-    <div id="journal-content" class="loading">Loading journal entries...</div>
-    <div style="text-align: right; margin-top: 5px;">
-        <a href="#" id="journal-all-link">see all journal entries (<span id="journal-count">0</span>) →</a>
+    <div id="journal-section">
+        <div id="journal-content" class="loading">Loading journal entries...</div>
+        <div style="text-align: right; margin-top: 5px;">
+            <a href="#" id="journal-all-link">see all journal entries (<span id="journal-count">0</span>) →</a>
+        </div>
     </div>
     
     <h2>MY CAT</h2>
-    <div id="cat-content" class="loading">Loading cat content...</div>
-    <div style="text-align: right; margin-top: 5px;">
-        <a href="#" id="cat-all-link">see all cat content (<span id="cat-count">0</span>) →</a>
+    <div id="cat-section">
+        <div id="cat-content" class="cat-section loading">Loading cat content...</div>
+        <div style="text-align: right; margin-top: 5px;">
+            <a href="#" id="cat-all-link">see all cat content (<span id="cat-count">0</span>) →</a>
+        </div>
     </div>
     
     <h2>SOMETHING RANDOM</h2>
@@ -287,6 +304,56 @@
             }
         }
         
+        // Extract images and media from issue body
+        function extractMediaFromIssue(issueBody) {
+            // First check for explicitly tagged media
+            const mediaMatch = issueBody.match(/\[media\](.*?)(\[|\n\n|$)/s);
+            if (mediaMatch) {
+                return mediaMatch[1].trim().split('\n').map(url => url.trim()).filter(url => url);
+            }
+            
+            // If no explicit media tag, look for GitHub image attachments in markdown format
+            const imageMatches = issueBody.match(/!\[(.*?)\]\((.*?)\)/g);
+            if (imageMatches) {
+                return imageMatches.map(match => {
+                    const urlMatch = match.match(/!\[.*?\]\((.*?)\)/);
+                    return urlMatch ? urlMatch[1] : null;
+                }).filter(url => url);
+            }
+            
+            // If still no media found, look for plain URLs that might be images or videos
+            const urlMatches = issueBody.match(/(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg))/gi);
+            return urlMatches || [];
+        }
+        
+        // Extract description from issue body
+        function extractDescriptionFromIssue(issueBody) {
+            // Check for explicitly tagged description
+            const descMatch = issueBody.match(/\[description\](.*?)(\[|\n\n|$)/s);
+            if (descMatch) {
+                return descMatch[1].trim();
+            }
+            
+            // If no explicit description, use the first paragraph (limited to 100 chars)
+            const firstParagraph = issueBody.split('\n\n')[0].trim();
+            if (firstParagraph && !firstParagraph.includes('[') && !firstParagraph.includes('!')) {
+                return firstParagraph.length > 100 ? 
+                    firstParagraph.substring(0, 97) + '...' : 
+                    firstParagraph;
+            }
+            
+            return '';
+        }
+        
+        // Clean issue body for display (remove metadata sections)
+        function cleanIssueBodyForDisplay(issueBody) {
+            return issueBody
+                .replace(/\[description\](.*?)(\[|\n\n|$)/s, '')
+                .replace(/\[media\](.*?)(\[|\n\n|$)/s, '')
+                .replace(/!\[(.*?)\]\((.*?)\)/g, '') // Remove markdown images
+                .trim();
+        }
+        
         // Display content for a specific category
         function displayCategoryContent(category, issues) {
             const containerElement = document.getElementById(`${category}-content`);
@@ -295,19 +362,21 @@
             // Sort issues by date (newest first)
             issues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             
-            // Display only the first 5 issues
+            // Display only the first 5 issues (or all if less than 5)
             const displayIssues = issues.slice(0, 5);
+            
+            // If no issues to display
+            if (displayIssues.length === 0) {
+                containerElement.innerHTML = `<div class="item">No ${category} content yet.</div>`;
+                return;
+            }
             
             displayIssues.forEach(issue => {
                 const date = new Date(issue.created_at);
                 const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
                 
-                // Extract description from issue body if present
-                let description = '';
-                const descMatch = issue.body.match(/\[description\](.*?)(\[|\n|$)/s);
-                if (descMatch) {
-                    description = descMatch[1].trim();
-                }
+                // Extract description
+                const description = extractDescriptionFromIssue(issue.body);
                 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = category === 'cat' ? 'cat-item' : 'item';
@@ -330,16 +399,19 @@
         // Display random content
         function displayRandomContent(issues) {
             const containerElement = document.getElementById('random-content');
-            if (!containerElement || issues.length === 0) return;
+            if (!containerElement) return;
+            
+            if (issues.length === 0) {
+                containerElement.innerHTML = 'No random thoughts yet.';
+                return;
+            }
             
             // Pick a random issue
             const randomIssue = issues[Math.floor(Math.random() * issues.length)];
             
             // Format the content
-            containerElement.innerHTML = randomIssue.body.replace(/\[description\].*?(\[|\n|$)/s, '')
-                                                    .replace(/\[media\].*?(\[|\n|$)/s, '')
-                                                    .trim()
-                                                    .replace(/\n/g, '<br>');
+            containerElement.innerHTML = cleanIssueBodyForDisplay(randomIssue.body)
+                .replace(/\n/g, '<br>');
         }
         
         // Update last updated date
@@ -359,14 +431,13 @@
             }
         }
         
-        // Open modal with content
+                // Open modal with content
         function openContentModal(issue) {
             const modal = document.getElementById('contentModal');
             const modalContainer = document.getElementById('modal-container');
             
-            // Extract media URLs if present
-            const mediaMatch = issue.body.match(/\[media\](.*?)(\[|\n|$)/s);
-            const mediaUrls = mediaMatch ? mediaMatch[1].trim().split('\n').map(url => url.trim()).filter(url => url) : [];
+            // Extract media URLs
+            const mediaUrls = extractMediaFromIssue(issue.body);
             
             // Prepare content HTML
             let contentHTML = '';
@@ -386,14 +457,14 @@
                         `;
                     } else if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
                         // Image content
-                        contentHTML += `<img src="${url}" class="modal-content" alt="${issue.title}">`;
+                        contentHTML += `<img src="${url}" class="content-image" alt="${issue.title}">`;
                     } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
                         // YouTube embed
                         let videoId = '';
                         if (url.includes('youtube.com/watch')) {
                             videoId = new URL(url).searchParams.get('v');
                         } else if (url.includes('youtu.be/')) {
-                            videoId = url.split('youtu.be/')[1];
+                            videoId = url.split('youtu.be/')[1].split('?')[0];
                         }
                         
                         if (videoId) {
@@ -406,7 +477,7 @@
                         }
                     } else if (url.includes('vimeo.com')) {
                         // Vimeo embed
-                        const vimeoId = url.split('/').pop();
+                        const vimeoId = url.split('/').pop().split('?')[0];
                         contentHTML += `
                             <div class="video-container">
                                 <iframe src="https://player.vimeo.com/video/${vimeoId}" 
@@ -417,14 +488,18 @@
                 });
             }
             
-            // Add text content (excluding metadata tags)
-            let textContent = issue.body
-                .replace(/\[description\].*?(\[|\n|$)/s, '')
-                .replace(/\[media\].*?(\[|\n|$)/s, '')
-                .trim();
+            // Add title
+            contentHTML += `<h1 style="color:white; margin-bottom:5px;">${issue.title}</h1>`;
             
+            // Add date
+            const date = new Date(issue.created_at);
+            const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+            contentHTML += `<div style="color:#aaa; margin-bottom:20px; font-size:12px;">${formattedDate}</div>`;
+            
+            // Add text content
+            let textContent = cleanIssueBodyForDisplay(issue.body);
             if (textContent) {
-                contentHTML += `<div class="modal-text">${textContent.replace(/\n/g, '<br>')}</div>`;
+                contentHTML += `<div style="color:white; line-height:1.6;">${textContent.replace(/\n/g, '<br>')}</div>`;
             }
             
             // Display in modal
@@ -485,30 +560,30 @@
             issues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             
             let contentHTML = `
-                <div class="modal-text">
-                    <h1>${category.toUpperCase()}</h1>
-                    <div class="subtitle">all ${category} entries (${issues.length})</div>
+                <div style="color:white; padding:20px; max-width:700px; margin:50px auto;">
+                    <h1 style="text-transform:uppercase; margin-bottom:5px;">${category}</h1>
+                    <div style="color:#aaa; margin-bottom:30px; font-size:12px;">all ${category} entries (${issues.length})</div>
             `;
             
-            issues.forEach(issue => {
-                const date = new Date(issue.created_at);
-                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-                
-                // Extract description
-                let description = '';
-                const descMatch = issue.body.match(/\[description\](.*?)(\[|\n|$)/s);
-                if (descMatch) {
-                    description = descMatch[1].trim();
-                }
-                
-                contentHTML += `
-                    <div class="item">
-                        <span class="date">${formattedDate}</span>
-                        <a href="#" data-issue-id="${issue.number}">${issue.title}</a>
-                        ${description ? `<span class="description">${description}</span>` : ''}
-                    </div>
-                `;
-            });
+            if (issues.length === 0) {
+                contentHTML += `<p>No ${category} content yet.</p>`;
+            } else {
+                issues.forEach(issue => {
+                    const date = new Date(issue.created_at);
+                    const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                    
+                    // Extract description
+                    const description = extractDescriptionFromIssue(issue.body);
+                    
+                    contentHTML += `
+                        <div style="margin-bottom:15px;">
+                            <span style="color:#aaa; display:inline-block; width:90px; font-size:12px;">${formattedDate}</span>
+                            <a href="#" data-issue-id="${issue.number}" style="color:white;">${issue.title}</a>
+                            ${description ? `<span style="color:#bbb; font-size:12px; margin-left:10px; font-style:italic;">${description}</span>` : ''}
+                        </div>
+                    `;
+                });
+            }
             
             contentHTML += '</div>';
             
@@ -547,9 +622,10 @@
                 const modalContainer = document.getElementById('modal-container');
                 
                 modalContainer.innerHTML = `
-                    <div class="modal-text">
+                    <div style="color:white; padding:20px; max-width:700px; margin:50px auto;">
                         <h1>ABOUT</h1>
                         <p>No about information available yet.</p>
+                        <p>Create an issue with the "about" label to add information here.</p>
                     </div>
                 `;
                 
@@ -562,51 +638,55 @@
             const modal = document.getElementById('contentModal');
             const modalContainer = document.getElementById('modal-container');
             
-            // Sort all issues by date (newest first)
-            const sortedIssues = [...allIssues].sort((a, b) => 
-                new Date(b.created_at) - new Date(a.created_at)
-            );
-            
-            let contentHTML = `
-                <div class="modal-text">
-                    <h1>COMPLETE ARCHIVE</h1>
-                    <div class="subtitle">all entries (${sortedIssues.length})</div>
-            `;
-            
-            sortedIssues.forEach(issue => {
-                const date = new Date(issue.created_at);
-                const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-                
+            // Filter out about and random entries
+            const contentIssues = allIssues.filter(issue => {
                 // Get category from labels
-                let category = 'misc';
                 for (const [cat, label] of Object.entries(CATEGORIES)) {
                     if (issue.labels.some(l => l.name.toLowerCase() === label.toLowerCase())) {
-                        category = cat;
-                        break;
+                        return cat !== 'about' && cat !== 'random';
                     }
                 }
-                
-                // Skip about and random entries in the archive
-                if (category === 'about' || category === 'random') {
-                    return;
-                }
-                
-                // Extract description
-                let description = '';
-                const descMatch = issue.body.match(/\[description\](.*?)(\[|\n|$)/s);
-                if (descMatch) {
-                    description = descMatch[1].trim();
-                }
-                
-                contentHTML += `
-                    <div class="item">
-                        <span class="date">${formattedDate}</span>
-                        <a href="#" data-issue-id="${issue.number}">${issue.title}</a>
-                        <span style="color:#888; margin-left:5px;">[${category}]</span>
-                        ${description ? `<span class="description">${description}</span>` : ''}
-                    </div>
-                `;
+                return false;
             });
+            
+            // Sort issues by date (newest first)
+            contentIssues.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            let contentHTML = `
+                <div style="color:white; padding:20px; max-width:700px; margin:50px auto;">
+                    <h1>COMPLETE ARCHIVE</h1>
+                    <div style="color:#aaa; margin-bottom:30px; font-size:12px;">all entries (${contentIssues.length})</div>
+            `;
+            
+            if (contentIssues.length === 0) {
+                contentHTML += '<p>No content yet.</p>';
+            } else {
+                contentIssues.forEach(issue => {
+                    const date = new Date(issue.created_at);
+                    const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+                    
+                    // Get category from labels
+                    let category = 'misc';
+                    for (const [cat, label] of Object.entries(CATEGORIES)) {
+                        if (issue.labels.some(l => l.name.toLowerCase() === label.toLowerCase())) {
+                            category = cat;
+                            break;
+                        }
+                    }
+                    
+                    // Extract description
+                    const description = extractDescriptionFromIssue(issue.body);
+                    
+                    contentHTML += `
+                        <div style="margin-bottom:15px;">
+                            <span style="color:#aaa; display:inline-block; width:90px; font-size:12px;">${formattedDate}</span>
+                            <a href="#" data-issue-id="${issue.number}" style="color:white;">${issue.title}</a>
+                            <span style="color:#999; margin-left:5px; font-size:11px;">[${category}]</span>
+                            ${description ? `<span style="color:#bbb; font-size:12px; margin-left:10px; font-style:italic;">${description}</span>` : ''}
+                        </div>
+                    `;
+                });
+            }
             
             contentHTML += '</div>';
             
