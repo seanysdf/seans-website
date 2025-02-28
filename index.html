@@ -58,22 +58,97 @@
     <script>
         // Function to load content from JSON file
         function loadContent(contentType, elementId, limit = 5) {
+            console.log(`Loading ${contentType} content...`);
+            
+            // Get the content section element
+            const contentSection = document.getElementById(elementId);
+            if (!contentSection) {
+                console.error(`Element with ID ${elementId} not found`);
+                return;
+            }
+            
+            // Attempt to fetch the data
             fetch(`./data/${contentType}.json?v=${new Date().getTime()}`)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`No ${contentType} content found`);
-                    }
+                    console.log(`${contentType} response status:`, response.status);
                     return response.json();
                 })
                 .then(data => {
-                    const contentSection = document.getElementById(elementId);
+                    console.log(`${contentType} data:`, data);
                     contentSection.innerHTML = ''; // Clear loading message
                     
                     // Display the most recent items
-                    if (data.items && data.items.length > 0) {
+                    if (data && data.items && data.items.length > 0) {
                         // Update the last updated date
                         if (data.items[0] && data.items[0].date) {
                             document.getElementById('last-updated-date').textContent = data.items[0].date;
                         }
                         
-                        data.items.
+                        data.items.slice(0, limit).forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = contentType === 'cat' ? 'cat-item' : 'item';
+                            
+                            // Create date span
+                            const dateSpan = document.createElement('span');
+                            dateSpan.className = 'date';
+                            dateSpan.textContent = item.date;
+                            itemDiv.appendChild(dateSpan);
+                            
+                            // Create title link
+                            const titleLink = document.createElement('a');
+                            titleLink.href = item.url;
+                            titleLink.textContent = item.title;
+                            itemDiv.appendChild(titleLink);
+                            
+                            // Add description if available
+                            if (item.description) {
+                                const descSpan = document.createElement('span');
+                                descSpan.className = 'description';
+                                descSpan.textContent = item.description;
+                                itemDiv.appendChild(descSpan);
+                            }
+                            
+                            contentSection.appendChild(itemDiv);
+                        });
+                        
+                        // Add "see all" link if there are more than the limit
+                        if (data.items.length > limit) {
+                            const seeAllDiv = document.createElement('div');
+                            seeAllDiv.className = 'view-all';
+                            seeAllDiv.innerHTML = `<a href="pages/${contentType}.html">see all ${contentType} (${data.items.length}) →</a>`;
+                            contentSection.appendChild(seeAllDiv);
+                        }
+                    } else {
+                        const emptyItem = document.createElement('div');
+                        emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
+                        emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                        contentSection.appendChild(emptyItem);
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error loading ${contentType} content:`, error);
+                    contentSection.innerHTML = '';
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = contentType === 'cat' ? 'cat-item' : 'item';
+                    emptyItem.innerHTML = '<span class="date">--.--.----</span>No entries yet';
+                    contentSection.appendChild(emptyItem);
+                });
+        }
+
+        // Load all content types when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM loaded, starting content loading");
+            loadContent('art', 'art-section');
+            loadContent('photos', 'photos-section');
+            loadContent('videos', 'videos-section');
+            loadContent('journal', 'journal-section');
+            loadContent('cat', 'cat-section');
+            
+            // Set today's date as the default
+            const today = new Date();
+            const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth()+1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+            document.getElementById('last-updated-date').textContent = formattedDate;
+        });
+    </script>
+</body>
+</html>
