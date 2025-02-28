@@ -105,6 +105,12 @@ a:visited {
 
 .image {
     margin: 20px 0;
+    text-align: center;
+}
+
+.image img {
+    max-width: 100%;
+    height: auto;
 }
 
 .video-container {
